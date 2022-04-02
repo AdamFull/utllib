@@ -21,6 +21,7 @@ namespace utl
         void allocate(const size_t _Count)
         {
             m_iAllocated += _Count;
+            m_iAllocations++;
             fprintf(stderr, "Allocated %zu bytes for object \"%s\".\n", _Count * sizeof(_Ty), typeid(_Ty).name());
         }
 
@@ -28,10 +29,11 @@ namespace utl
         void deallocate(_Ty *const _Ptr, const size_t _Count)
         {
             m_iDeallocated += _Count;
+            m_iDeallocations++;
             fprintf(stderr, "Deallocated %zu bytes for object \"%s\" (%p).\n", _Count * sizeof(_Ty), typeid(_Ty).name(), _Ptr);
         }
 
     private:
-        size_t m_iAllocated{0}, m_iDeallocated{0};
+        size_t m_iAllocated{0}, m_iDeallocated{0}, m_iAllocations{0}, m_iDeallocations{0};
     };
 }
