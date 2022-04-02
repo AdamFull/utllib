@@ -103,10 +103,10 @@ namespace utl
 			auto& worker = _workers.at(_cworker++);
 			auto task_promise = make_shared<std::promise<_Kty>>();
 			auto future = task_promise->get_future();
-			
-			worker->push([work = std::forward<_Ty>(work), ...args = std::forward<_Types>(args), task_promise]()
+
+			worker->push([work = std::forward<_Ty>(work), args..., task_promise]()
 			{
-				try { task_promise->set_value(work(std::forward<_Types>(args)...)); }
+				try { task_promise->set_value(work(args...)); }
 				catch(...)
 				{
 					try { task_promise->set_exception(std::current_exception()); }

@@ -31,7 +31,7 @@ int main()
     for(uint32_t t = 0; t < 1000; t++) results.emplace_back(pool.submit([=](const uint32_t a, const uint32_t b, const uint32_t c) -> uint32_t
     { 
         return (a*1000/10)*(120 + b*t+c)/(a+b*c)+1; 
-    }, static_cast<uint32_t>(t*t, t/(t+1)), static_cast<uint32_t>((t*t)*t/t+1), static_cast<uint32_t>(((t-t)+(t/t+1)))));
+    }, static_cast<uint32_t>(t+10), static_cast<uint32_t>(t+20), static_cast<uint32_t>(t*20)));
     pool.wait();
 
     uint32_t sum{0};
