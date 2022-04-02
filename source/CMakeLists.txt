@@ -1,21 +1,13 @@
 cmake_minimum_required(VERSION 3.19.1)
+project(utllib)
 
-# Initializing project
-project(utl-test)
+file(GLOB_RECURSE CPP_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-set(CPP_FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
-)
-
-add_executable(${PROJECT_NAME} ${CPP_FILES} ${HPP_FILES})
-
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source)
+add_library(${PROJECT_NAME} ${CPP_FILES})
 
 target_include_directories( ${PROJECT_NAME} PRIVATE 
-    ${CMAKE_CURRENT_SOURCE_DIR}/source
+    ${CMAKE_CURRENT_SOURCE_DIR}/
 )
-
-target_link_libraries(${PROJECT_NAME} utllib)
 
 # Define project properties
 set_property(TARGET ${PROJECT_NAME} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)

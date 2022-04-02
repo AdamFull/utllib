@@ -4,13 +4,10 @@
 
 namespace utl
 {
-    namespace util
+    class non_copy_movable : public non_copyable, public non_movable
     {
-        class non_copy_movable : public non_copyable, public non_movable
-        {
-        protected:
-            non_copy_movable() = default;
-            virtual ~non_copy_movable() = default;
-        };
-    }
+    protected:
+        non_copy_movable() = default;
+        virtual ~non_copy_movable() = default;
+    };
 }

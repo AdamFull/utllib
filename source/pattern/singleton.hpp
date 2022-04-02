@@ -1,23 +1,22 @@
 #pragma once
 #include <util/non_copy_movable.hpp>
+#include <memory/allocator.hpp>
 
 namespace utl
 {
-    namespace pattern
+    template <class _Ty>
+    class singleton : public non_copy_movable
     {
-        template<class T>
-        class singleton : public non_copy_movable
+        // template<> std::unique_ptr<_Ty> singleton<_Ty>::_instance{ nullptr };
+    protected:
+        static std::unique_ptr<_Ty> _instance;
+
+    public:
+        static std::unique_ptr<_Ty> &getInstance()
         {
-        //template<> std::unique_ptr<T> singleton<T>::_instance{ nullptr };
-        protected:
-            static std::unique_ptr<T> _instance;
-        public:
-            static std::unique_ptr<T>& getInstance()
-            {
-                if (!_instance)
-                    _instance.reset(new T());
-                return _instance;
-            }
-        };
-    }
+            if (!_instance)
+                _instance = make_unique<singleton<_Ty>>(); //.reset(new _Ty());
+            return _instance;
+        }
+    };
 }
