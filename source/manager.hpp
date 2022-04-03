@@ -3,9 +3,9 @@
 #include <fstream>
 #include <format>
 #include <iomanip>
+#include <algorithm>
 #include <sstream>
 #include <string>
-#include <algorithm>
 
 namespace utl
 {
