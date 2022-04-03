@@ -5,7 +5,7 @@ class Zalupa{};
 int main()
 {
     //------------------String util test begin------------------
-    std::cout << "------------------String util test begin------------------" << std::endl;
+    /*std::cout << "------------------String util test begin------------------" << std::endl;
     auto var = 10;
     auto converted = utl::string_util::conv(var);
     auto casted = utl::string_util::cast<int>(converted);
@@ -13,7 +13,7 @@ int main()
     << utl::string_util::name_of(converted) << casted << " " 
     << utl::string_util::name_of(casted) << " " 
     << utl::string_util::name_of<Zalupa>() << std::endl;
-    std::cout << "------------------String util test end------------------" << std::endl;
+    std::cout << "------------------String util test end------------------" << std::endl;*/
     //------------------String util test end------------------
 
 

@@ -1,6 +1,6 @@
 #pragma once
-#include <util/non_copy_movable.hpp>
-#include <memory/allocator.hpp>
+#include "uutility.hpp"
+#include "umemory.hpp"
 
 namespace utl
 {
@@ -15,7 +15,7 @@ namespace utl
         static std::unique_ptr<_Ty> &getInstance()
         {
             if (!_instance)
-                _instance = make_unique<singleton<_Ty>>(); //.reset(new _Ty());
+                _instance = make_unique<_Ty>(); //.reset(new _Ty());
             return _instance;
         }
     };

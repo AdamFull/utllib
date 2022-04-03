@@ -1,5 +1,5 @@
 #pragma once
-#include <memory/manager.hpp>
+#include "manager.hpp"
 
 namespace utl
 {
@@ -30,13 +30,13 @@ namespace utl
 
         _NODISCARD _CONSTEXPR20_DYNALLOC __declspec(allocator) _Ty *allocate(_CRT_GUARDOVERFLOW const size_t _Count)
         {
-            memory_manager::getInstance()->allocate<_Ty>(_Count * sizeof(_Ty));
+            memory_meter::getInstance()->allocate<_Ty>(_Count * sizeof(_Ty));
             return std::allocator<_Ty>::allocate(_Count);
         }
 
         _CONSTEXPR20_DYNALLOC void deallocate(_Ty *const _Ptr, const size_t _Count)
         {
-            memory_manager::getInstance()->deallocate<_Ty>(_Ptr, _Count * sizeof(_Ty));
+            memory_meter::getInstance()->deallocate<_Ty>(_Ptr, _Count * sizeof(_Ty));
             return std::allocator<_Ty>::deallocate(_Ptr, _Count);
         }
 

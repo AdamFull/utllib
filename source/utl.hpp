@@ -1,8 +1,8 @@
 #pragma once
 
-#include <containers/cantainers.hpp>
-#include <reactive/variable.hpp>
-#include <pattern/singleton.hpp>
-#include <memory/allocator.hpp>
-#include <delegate/function.hpp>
-#include <threading/threadpool.hpp>
+#include "udatatypes.hpp"
+#include "ufunction.hpp"
+#include "umemory.hpp"
+#include "upattern.hpp"
+#include "ureactive.hpp"
+#include "uthreading.hpp"
