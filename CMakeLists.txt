@@ -7,15 +7,18 @@ set(CPP_FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 )
 
+find_package(libzip REQUIRED)
+
 add_executable(${PROJECT_NAME} ${CPP_FILES} ${HPP_FILES})
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/source)
 
 target_include_directories( ${PROJECT_NAME} PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/source
+    libzip::zip
 )
 
-target_link_libraries(${PROJECT_NAME} utllib)
+target_link_libraries(${PROJECT_NAME} utllib libzip::zip)
 
 # Define project properties
 set_property(TARGET ${PROJECT_NAME} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
