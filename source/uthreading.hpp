@@ -15,7 +15,7 @@ namespace utl
 	private:
 		bool _destroying = false;
 		std::thread _thread;
-		std::queue<function<void()>> _work_queue;
+		queue<function<void()>> _work_queue;
 		std::mutex _queue_mutex;
 		std::condition_variable _condition;
 
@@ -102,7 +102,7 @@ namespace utl
 		std::future<_Kty> submit(_Ty&& work, _Types&& ...args)
 		{
 			auto& worker = _workers.at(_cworker++);
-			auto task_promise = std::make_shared<std::promise<_Kty>>();
+			auto task_promise = make_shared<std::promise<_Kty>>();
 			auto future = task_promise->get_future();
 
 			worker->push([work = std::forward<_Ty>(work), args..., task_promise]()
@@ -126,7 +126,7 @@ namespace utl
             _total = count;
             _workers.clear();
 			for (auto i = 0; i < _total; i++)
-				_workers.emplace_back(std::make_unique<worker>());
+				_workers.emplace_back(make_unique<worker>());
         }
 
         void wait()
@@ -135,7 +135,7 @@ namespace utl
 				worker->wait();
         }
     private:
-        std::vector<std::unique_ptr<worker>> _workers;
+        std::vector<unique_ptr<worker>> _workers;
         size_t _total{0}, _cworker{0};
     };
 }

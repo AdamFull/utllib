@@ -76,28 +76,30 @@
 #include <map>
 #include <atomic>
 #include <chrono>
+#include "zipextractor.hpp"
 
-enum class ETaskStatus
+struct FTaskData
 {
-    eIdle,
-    eInProgress,
-    eFinished
-};
+    enum class ETaskStatus
+    {
+        eIdle,
+        eInProgress,
+        eFinished
+    };
 
-enum class ETaskType
-{
-    eDownloader,
-    eUnpacker,
-    eFister
-};
+    enum class ETaskType
+    {
+        eDownloader,
+        eUnpacker,
+        eFister
+    };
 
-struct TaskData
-{
-    int32_t progress;
-    uint32_t id;
-    ETaskStatus eStatus;
-    ETaskType eType;
-    //std::string srUri;
+    int32_t finished, total;
+    uint32_t game_id;
+    std::string uri;
+    fs::path savepath;
+    ETaskStatus status;
+    ETaskType type;
 };
 
 
@@ -105,13 +107,13 @@ class IObservable
 {
 public:
     virtual ~IObservable() {}
-    virtual void notify(TaskData) = 0;
+    virtual void notify(FTaskData) = 0;
 };
 
 class IObserver
 {
 public:
-    void update(TaskData data)
+    void update(FTaskData data)
     {
         for(auto& observer : m_vObservers)
             observer->notify(data);
@@ -125,10 +127,19 @@ class Task : public IObserver
 public:
     void begin()
     {
-        task_data.eStatus = ETaskStatus::eIdle; notify();
-        task_data.eStatus = ETaskStatus::eInProgress; 
-        do_work();
-        task_data.eStatus = ETaskStatus::eFinished;
+        task_data.status = FTaskData::ETaskStatus::eIdle; notify();
+        task_data.status = FTaskData::ETaskStatus::eInProgress; 
+
+        try
+        {
+            do_work();
+        }
+        catch(...)
+        {
+            std::rethrow_exception(std::current_exception());
+        }
+
+        task_data.status = FTaskData::ETaskStatus::eFinished;
     }
 
     virtual void do_work() = 0;
@@ -138,10 +149,10 @@ public:
 
     void notify() { update(task_data); }
 protected:
-    TaskData task_data;
-    Task(std::shared_ptr<IObservable> pObservable, uint32_t game_id)
+    FTaskData task_data;
+    Task(std::shared_ptr<IObservable> pObservable, FTaskData data)
     {
-        task_data.id = game_id;
+        task_data = data;
         m_vObservers.emplace_back(pObservable);
     }
 
@@ -151,7 +162,9 @@ protected:
 class DownloadingTask : public Task
 {
 public:
-    DownloadingTask(std::shared_ptr<IObservable> pObservable, uint32_t game_id) : Task(pObservable, game_id) { task_data.eType = ETaskType::eDownloader; }
+    DownloadingTask(std::shared_ptr<IObservable> pObservable, FTaskData data) : Task(pObservable, data) 
+    { task_data.type = FTaskData::ETaskType::eDownloader; }
+
     void do_work() override
     {
         for(auto i = 0; i < 500; i++)
@@ -159,7 +172,7 @@ public:
             //Pause work
             while(m_bIsPaused);
 
-            task_data.progress = i; notify();
+            task_data.finished = i; task_data.total = 500; notify();
             std::this_thread::sleep_for(std::chrono::milliseconds{1});
         }
     }
@@ -168,7 +181,8 @@ public:
 class UnpackingTask : public Task
 {
 public:
-    UnpackingTask(std::shared_ptr<IObservable> pObservable, uint32_t game_id) : Task(pObservable, game_id) { task_data.eType = ETaskType::eUnpacker; }
+    UnpackingTask(std::shared_ptr<IObservable> pObservable, FTaskData data) : Task(pObservable, data) 
+    { task_data.type = FTaskData::ETaskType::eUnpacker; }
 
     void do_work() override
     {
@@ -177,7 +191,7 @@ public:
             //Pause work
             while(m_bIsPaused.load(std::memory_order::acquire));
 
-            task_data.progress = i; notify();
+            task_data.finished = i; task_data.total = 500; notify();
             std::this_thread::sleep_for(std::chrono::milliseconds{1});
         }
     }
@@ -186,11 +200,6 @@ public:
 class Container
 {
 public:
-    Container()
-    {
-        int iiiii = 0;
-    }
-
     void begin()
     {
         while(true)
@@ -228,17 +237,17 @@ public:
         
     }
 
-    void begin_download(uint32_t game_id, const std::string& str)
+    void begin_download(FTaskData data, const std::string& str)
     {
         //check task status on config
         auto task_container = std::make_shared<Container>();
-        task_container->push(std::make_unique<DownloadingTask>(shared_from_this(), game_id));
-        task_container->push(std::make_unique<UnpackingTask>(shared_from_this(), game_id));
+        task_container->push(std::make_unique<DownloadingTask>(shared_from_this(), data));
+        task_container->push(std::make_unique<UnpackingTask>(shared_from_this(), data));
 
-        tasks.emplace(game_id, task_container);
+        tasks.emplace(data.game_id, task_container);
         pool.push([=]()
         { 
-            auto it = tasks.find(game_id);
+            auto it = tasks.find(data.game_id);
             if(it != tasks.end())
                 it->second->begin(); 
         });
@@ -265,11 +274,11 @@ public:
             tasks.erase(it);
     }
 
-    void notify(TaskData data) override
+    void notify(FTaskData data) override
     {
         {
             std::unique_lock<std::mutex> _lock(callback_mutex);
-            std::cout << "[" << data.id << "] " << static_cast<int>(data.eStatus) << ":" << data.progress << " | " << static_cast<int>(data.eType) << std::endl;
+            std::cout << "[" << data.game_id << "] " << static_cast<int>(data.status) << ":" << data.finished << " | " << static_cast<int>(data.type) << std::endl;
             /*auto it = tasks.find(data.id);
             if(it != tasks.end())
                 if(!it->second->is_valid())
@@ -296,7 +305,7 @@ private:
 
 int main()
 {
-    auto manager = std::make_shared<DownloadingManager>();
+    /*auto manager = std::make_shared<DownloadingManager>();
     manager->begin_download(1001, "jkaflfa");
     manager->begin_download(1002, "hfokashnopfisd");
     manager->begin_download(1488, "lkshfal");
@@ -312,7 +321,8 @@ int main()
     manager->resume(1488);
     std::cout << "resumed" << std::endl;
 
-    manager->wait();
+    manager->wait();*/
+    zipextractor::extract("C:\\Users\\AdamFull\\Documents\\GitHub\\utllib\\bin\\debug\\Memory_Manager.zip", "C:\\Users\\AdamFull\\Documents\\GitHub\\utllib\\bin\\debug");
     return 0;
 
 }
