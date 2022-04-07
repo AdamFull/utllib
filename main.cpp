@@ -2,7 +2,23 @@
 #include <iostream>
 #include <filesystem>
 
-class Zalupa{};
+class Zalupa
+{ 
+public:
+    virtual ~Zalupa() {}
+    virtual void cum() = 0;
+};
+
+class Chlen : public Zalupa 
+{ 
+public:
+    void cum() override
+    {
+
+    }
+};
+
+
 int main()
 {
     //------------------String util test begin------------------
@@ -36,7 +52,8 @@ int main()
 
     //------------------Custom allocator for unique_ptr test begin------------------
     std::cout << "------------------Custom allocator for unique_ptr test begin------------------" << std::endl;
-    auto pointer = utl::make_unique<utl::vector<utl::string>>();
+    auto pointer = utl::make_unique<Chlen>();
+    utl::unique_ptr<Zalupa> moved_pointer = std::move(pointer);
     std::cout << "------------------Custom allocator for unique_ptr test end------------------" << std::endl;
     //------------------Custom allocator for unique_ptr test end------------------
 

@@ -22,19 +22,21 @@ namespace utl
         using size_type = size_t;
         using difference_type = ptrdiff_t;
 
-        template <typename _Tp1>
-        struct rebind
-        {
-            typedef allocator<_Tp1> other;
-        };
+        constexpr allocator() noexcept {}
 
-        _NODISCARD _CONSTEXPR20_DYNALLOC __declspec(allocator) _Ty *allocate(_CRT_GUARDOVERFLOW const size_t _Count)
+        constexpr allocator(const allocator&) noexcept = default;
+        template <class _Other>
+        constexpr allocator(const allocator<_Other>&) noexcept {}
+        constexpr ~allocator() = default;
+        constexpr allocator& operator=(const allocator&) = default;
+
+        _NODISCARD constexpr __declspec(allocator) _Ty *allocate(_CRT_GUARDOVERFLOW const size_t _Count)
         {
             //memory_meter::getInstance()->allocate<_Ty>(_Count * sizeof(_Ty));
             return std::allocator<_Ty>::allocate(_Count);
         }
 
-        _CONSTEXPR20_DYNALLOC void deallocate(_Ty *const _Ptr, const size_t _Count)
+        constexpr void deallocate(_Ty *const _Ptr, const size_t _Count)
         {
             //memory_meter::getInstance()->deallocate<_Ty>(_Ptr, _Count * sizeof(_Ty));
             return std::allocator<_Ty>::deallocate(_Ptr, _Count);
@@ -48,10 +50,19 @@ namespace utl
 #endif
     };
 
+    template <class _Ty, class _Uy>
+    inline bool operator == (const allocator<_Ty>&, const allocator<_Uy>&) { return true; }
+
+    template <typename _Ty, typename _Uy>
+    inline bool operator != (const allocator<_Ty>& a, const allocator<_Uy>& b) { return !(a == b); }
+
     template<typename _Alloc>
     struct alloc_deleter
     {
-        alloc_deleter() {}
+        constexpr alloc_deleter() noexcept = default;
+
+        template <class _Uty, std::enable_if_t<std::is_convertible_v<_Uty (*)[], _Alloc (*)[]>, int> = 0>
+        alloc_deleter(const alloc_deleter<_Uty[]>&) noexcept {}
 
         alloc_deleter(const _Alloc& allocator) : allocator(allocator) { }
         alloc_deleter &operator=(const _Alloc& allocator) { this->allocator = allocator; return *this; }
