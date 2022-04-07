@@ -3,7 +3,7 @@ project(utllib)
 
 file(GLOB_RECURSE CPP_FILES ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-add_library(${PROJECT_NAME} ${CPP_FILES})
+add_library(${PROJECT_NAME} STATIC ${CPP_FILES})
 
 target_include_directories( ${PROJECT_NAME} PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/
