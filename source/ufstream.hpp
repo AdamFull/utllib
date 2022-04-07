@@ -9,10 +9,10 @@ namespace utl
     {
     public:
         explicit basic_ifstream(const string& _Str, std::ios_base::openmode _Mode = std::ios_base::in, int _Prot = std::ios_base::_Default_open_prot)
-        : std::basic_ifstream(_Str.c_str(), _Mode, _Prot) {} // _Prot is an extension
+        : std::basic_ifstream<_Elem, _Traits>(_Str.c_str(), _Mode, _Prot) {} // _Prot is an extension
 
         explicit basic_ifstream(const wstring& _Str, std::ios_base::openmode _Mode = std::ios_base::in, int _Prot = std::ios_base::_Default_open_prot)
-        : std::basic_ifstream(_Str.c_str(), _Mode, _Prot) {} // extension
+        : std::basic_ifstream<_Elem, _Traits>(_Str.c_str(), _Mode, _Prot) {} // extension
 
         void open(const string& _Str, std::ios_base::openmode _Mode = std::ios_base::in, int _Prot = std::ios_base::_Default_open_prot) 
         {
@@ -32,10 +32,10 @@ namespace utl
     {
     public:
         explicit basic_ofstream(const string& _Str, std::ios_base::openmode _Mode = std::ios_base::out, int _Prot = std::ios_base::_Default_open_prot)
-        : std::basic_ofstream(_Str.c_str(), _Mode, _Prot) {} // _Prot is an extension
+        : std::basic_ofstream<_Elem, _Traits>(_Str.c_str(), _Mode, _Prot) {} // _Prot is an extension
 
         explicit basic_ofstream(const wstring& _Str, std::ios_base::openmode _Mode = std::ios_base::out, int _Prot = std::ios_base::_Default_open_prot)
-        : std::basic_ofstream(_Str.c_str(), _Mode, _Prot) {} // extension
+        : std::basic_ofstream<_Elem, _Traits>(_Str.c_str(), _Mode, _Prot) {} // extension
 
         void open(const string& _Str, std::ios_base::openmode _Mode = std::ios_base::out, int _Prot = std::ios_base::_Default_open_prot) 
         {
@@ -55,10 +55,10 @@ namespace utl
     {
     public:
         explicit basic_fstream(const string& _Str, std::ios_base::openmode _Mode = std::ios_base::in | std::ios_base::out, int _Prot = std::ios_base::_Default_open_prot)
-        : std::basic_fstream(_Str.c_str(), _Mode, _Prot) {} // _Prot is an extension
+        : std::basic_fstream<_Elem, _Traits>(_Str.c_str(), _Mode, _Prot) {} // _Prot is an extension
 
         explicit basic_fstream(const wstring& _Str, std::ios_base::openmode _Mode = std::ios_base::in | std::ios_base::out, int _Prot = std::ios_base::_Default_open_prot)
-        : std::basic_fstream(_Str.c_str(), _Mode, _Prot) {} // extension
+        : std::basic_fstream<_Elem, _Traits>(_Str.c_str(), _Mode, _Prot) {} // extension
 
         void open(const string& _Str, std::ios_base::openmode _Mode = std::ios_base::in | std::ios_base::out, int _Prot = std::ios_base::_Default_open_prot) 
         {
