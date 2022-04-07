@@ -53,7 +53,7 @@ int main()
     //------------------Custom allocator for unique_ptr test begin------------------
     std::cout << "------------------Custom allocator for unique_ptr test begin------------------" << std::endl;
     auto pointer = utl::make_unique<Chlen>();
-    utl::unique_ptr<Zalupa> moved_pointer = std::move(pointer);
+    //utl::unique_ptr<Zalupa> moved_pointer = std::move(pointer);
     std::cout << "------------------Custom allocator for unique_ptr test end------------------" << std::endl;
     //------------------Custom allocator for unique_ptr test end------------------
 

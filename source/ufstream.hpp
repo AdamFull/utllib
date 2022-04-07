@@ -8,6 +8,8 @@ namespace utl
     class basic_ifstream : public std::basic_ifstream<_Elem, _Traits>
     {
     public:
+        basic_ifstream() : std::basic_ifstream<_Elem, _Traits>() {}
+
         explicit basic_ifstream(const string& _Str, std::ios_base::openmode _Mode = std::ios_base::in, int _Prot = std::ios_base::_Default_open_prot)
         : std::basic_ifstream<_Elem, _Traits>(_Str.c_str(), _Mode, _Prot) {} // _Prot is an extension
 
@@ -31,6 +33,8 @@ namespace utl
     class basic_ofstream : public std::basic_ofstream<_Elem, _Traits>
     {
     public:
+        basic_ofstream() : std::basic_ofstream<_Elem, _Traits>() {}
+
         explicit basic_ofstream(const string& _Str, std::ios_base::openmode _Mode = std::ios_base::out, int _Prot = std::ios_base::_Default_open_prot)
         : std::basic_ofstream<_Elem, _Traits>(_Str.c_str(), _Mode, _Prot) {} // _Prot is an extension
 
@@ -54,6 +58,8 @@ namespace utl
     class basic_fstream : public std::basic_fstream<_Elem, _Traits>
     {
     public:
+        basic_fstream() : std::basic_fstream<_Elem, _Traits>() {}
+
         explicit basic_fstream(const string& _Str, std::ios_base::openmode _Mode = std::ios_base::in | std::ios_base::out, int _Prot = std::ios_base::_Default_open_prot)
         : std::basic_fstream<_Elem, _Traits>(_Str.c_str(), _Mode, _Prot) {} // _Prot is an extension
 
