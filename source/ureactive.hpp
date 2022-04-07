@@ -48,6 +48,11 @@ namespace utl
             return last_changed;
         }
 
+        inline T &operator+=(const T &val)
+        {
+            return operator=(val + value.value());
+        }
+
     private:
         template <typename U = T>
         typename std::enable_if<std::is_floating_point<U>::value, bool>::type
