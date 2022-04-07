@@ -52,7 +52,16 @@ namespace utl
     struct alloc_deleter
     {
         alloc_deleter() {}
+
         alloc_deleter(const _Alloc& allocator) : allocator(allocator) { }
+        alloc_deleter &operator=(const _Alloc& allocator) { this->allocator = allocator; return *this; }
+        alloc_deleter(_Alloc&& allocator) : allocator(std::move(allocator)) {}
+        alloc_deleter &operator=(_Alloc&& allocator) noexcept { this->allocator = std::move(allocator); return *this; }
+
+        alloc_deleter(const alloc_deleter& deleter) = default;
+        alloc_deleter &operator=(const alloc_deleter& deleter) = default;
+        alloc_deleter(alloc_deleter&& deleter) noexcept = default;
+        alloc_deleter &operator=(alloc_deleter&& deleter) noexcept = default;
 
         typedef typename std::allocator_traits<_Alloc>::pointer pointer;
 
