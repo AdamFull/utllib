@@ -51,6 +51,7 @@ namespace utl
     template<typename _Alloc>
     struct alloc_deleter
     {
+        alloc_deleter() {}
         alloc_deleter(const _Alloc& allocator) : allocator(allocator) { }
 
         typedef typename std::allocator_traits<_Alloc>::pointer pointer;
