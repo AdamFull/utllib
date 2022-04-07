@@ -89,8 +89,8 @@ namespace utl
     using wios = std::basic_ios<wchar_t, std::char_traits<wchar_t>>;
     using wstreambuf = std::basic_streambuf<wchar_t, std::char_traits<wchar_t>>;
     using wistream = std::basic_istream<wchar_t, std::char_traits<wchar_t>>;
-    using ostream = std::basic_ostream<wchar_t, std::char_traits<wchar_t>>;
-    using iostream = std::basic_iostream<wchar_t, std::char_traits<wchar_t>>;
+    using wostream = std::basic_ostream<wchar_t, std::char_traits<wchar_t>>;
+    using wiostream = std::basic_iostream<wchar_t, std::char_traits<wchar_t>>;
     using wstringbuf = std::basic_stringbuf<wchar_t, std::char_traits<wchar_t>, allocator<wchar_t>>;
     using wistringstream = std::basic_istringstream<wchar_t, std::char_traits<wchar_t>, allocator<wchar_t>>;
     using wostringstream = std::basic_ostringstream<wchar_t, std::char_traits<wchar_t>, allocator<wchar_t>>;
