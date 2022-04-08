@@ -13,7 +13,8 @@ namespace utl
     class worker
 	{
 	private:
-		bool _destroying = false;
+		std::atomic<bool> _destroying{false};
+		std::atomic<bool> _waiting{true};
 		std::thread _thread;
 		queue<function<void()>> _work_queue;
 		std::mutex _queue_mutex;
@@ -29,6 +30,7 @@ namespace utl
 					_condition.wait(lock_begin, [this] { return !_work_queue.empty() || _destroying; });
 					if (_destroying) break;
 					work = _work_queue.front();
+					_waiting = false;
 				}
 
 				work();
@@ -36,6 +38,7 @@ namespace utl
 				{
 					std::lock_guard<std::mutex> lock_end(_queue_mutex);
 					_work_queue.pop();
+					_waiting = true;
 					_condition.notify_one();
 				}
 			}
@@ -80,6 +83,11 @@ namespace utl
 			std::unique_lock<std::mutex> lock(_queue_mutex);
 			_condition.wait(lock, [this]() { return _work_queue.empty(); });
 		}
+
+		bool is_free()
+		{
+			return _waiting;
+		}
 	};
 
     class threadpool
@@ -93,19 +101,29 @@ namespace utl
         template<class... _Types>
         void push(_Types&& ...args)
         {
-            _workers.at(_cworker++)->push(std::forward<_Types>(args)...);
-            if(_cworker > _total - 1)
-                _cworker = 0;
+			_current = std::find_if(_workers.begin(), _workers.end(), [](const unique_ptr<worker>& worker) { return worker->is_free(); });
+
+			if(_current != _workers.end())
+				(*_current)->push(std::forward<_Types>(args)...);
+			else
+			{
+				auto _cur = ++_current;
+				if(_cur != _workers.end())
+					(*_cur)->push(std::forward<_Types>(args)...);
+				else
+					_workers.front()->push(std::forward<_Types>(args)...);
+			}
         }
 
 		template<class _Ty, class... _Types, typename _Kty = std::invoke_result_t<std::decay_t<_Ty>, std::decay_t<_Types>...>, typename = std::enable_if_t<!std::is_void_v<_Ty>>>
 		std::future<_Kty> submit(_Ty&& work, _Types&& ...args)
 		{
-			auto& worker = _workers.at(_cworker++);
+			_current = std::find_if(_workers.begin(), _workers.end(), [](const unique_ptr<worker>& worker) { return worker->is_free(); });
+
 			auto task_promise = make_shared<std::promise<_Kty>>();
 			auto future = task_promise->get_future();
 
-			worker->push([work = std::forward<_Ty>(work), args..., task_promise]()
+			(*_current)->push([work = std::forward<_Ty>(work), args..., task_promise]()
 			{
 				try { task_promise->set_value(work(args...)); }
 				catch(...)
@@ -115,8 +133,8 @@ namespace utl
 				}
 			});
 
-			if(_cworker > _total - 1)
-                _cworker = 0;
+			if(_current == _workers.end())
+                _current = _workers.begin();
 
 			return future;
 		}
@@ -136,6 +154,7 @@ namespace utl
         }
     private:
         std::vector<unique_ptr<worker>> _workers;
-        size_t _total{0}, _cworker{0};
+		std::vector<unique_ptr<worker>>::iterator _current;
+        size_t _total{0};
     };
 }
