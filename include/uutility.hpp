@@ -1,5 +1,8 @@
 #pragma once
 
+#include <random>
+#include "ufstream.hpp"
+
 namespace utl
 {
     class non_copyable
