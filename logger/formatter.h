@@ -39,14 +39,28 @@ namespace utl
             return std::chrono::zoned_time{ std::chrono::current_zone(), std::chrono::system_clock::now() };
         }
 
-        static std::string get_formatted_datetime(time_format_t _time = get_time()) 
-        { return std::format("{:%F %T %Z}", _time); }
+        static std::string get_formatted_datetime() 
+        { 
+            auto _time = get_time();
+            return std::format("{} {} {}", get_formatted_date(_time), get_formatted_time(_time), get_formatted_timezone());
+        }
+
         static std::string get_formatted_date(time_format_t _time = get_time()) 
-        { return std::format("{:%F}", _time); }
+        { 
+            return std::format("{:%F}", _time); 
+        }
+
         static std::string get_formatted_time(time_format_t _time = get_time()) 
-        { return std::format("{:%T}", _time); }
+        { 
+            auto time = std::format("{:%T}", _time);
+            time = time.erase(time.find('.'), time.size() - 1);
+            return time; 
+        }
+
         static std::string get_formatted_timezone(time_format_t _time = get_time()) 
-        { return std::format("{:%Z}", _time); }
+        { 
+            return std::format("{:%Z}", _time); 
+        }
 
         static std::string get_source_path(const std::source_location& loc)
         {

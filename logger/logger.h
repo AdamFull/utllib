@@ -8,6 +8,8 @@
 #include "output/OutputFile.h"
 #include "output/OutputWinCmd.h"
 
+#include "debugbreak.h"
+
 namespace utl
 {
     class CLogger
@@ -36,12 +38,6 @@ namespace utl
 
             for(auto& output : vOutputs)
                 output->log(formatted, _level);
-
-            #ifndef NDEBUG
-                #include "debugbreak.h"
-                if(_level == ELogLevel::eError)
-                    debugbreak();
-            #endif
         }
 
     private:
@@ -55,7 +51,8 @@ namespace utl
 
 #define log_init(app_name, app_version) utl::CLogger::getInstance()->init(app_name, app_version);
 
-#define log_error(fmt, ...) utl::CLogger::getInstance()->log<utl::ELogLevel::eError>(std::source_location::current(), fmt, __VA_ARGS__)
+#define log_error(fmt, ...) { utl::CLogger::getInstance()->log<utl::ELogLevel::eError>(std::source_location::current(), fmt, __VA_ARGS__); debugbreak(); }
+#define log_cerror(cond, fmt, ...) if(!cond) log_error(fmt, __VA_ARGS__)
 #define log_warning(fmt, ...) utl::CLogger::getInstance()->log<utl::ELogLevel::eWarning>(std::source_location::current(), fmt, __VA_ARGS__)
 #define log_info(fmt, ...) utl::CLogger::getInstance()->log<utl::ELogLevel::eInfo>(std::source_location::current(), fmt, __VA_ARGS__)
 

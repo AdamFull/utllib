@@ -26,6 +26,7 @@
 #ifndef DEBUG_BREAK_H
 #define DEBUG_BREAK_H
 
+#ifndef NDEBUG
 #ifdef _MSC_VER
 
 #define debugbreak __debugbreak
@@ -171,4 +172,7 @@ __inline__ static void debugbreak(void)
 
 #endif /* ifdef _MSC_VER */
 
+#else
+#define debugbreak
+#endif
 #endif /* ifndef DEBUG_BREAK_H */

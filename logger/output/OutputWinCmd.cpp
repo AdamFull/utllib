@@ -16,7 +16,7 @@ COutputWinCmd::~COutputWinCmd()
 
 void COutputWinCmd::log(const std::string& message, ELogLevel eLevel)
 {
-    write(formatter::colorize(eLevel, message));
+    write(message);
 }
 
 void COutputWinCmd::write(const std::string& write)
