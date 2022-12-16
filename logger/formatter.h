@@ -3,8 +3,8 @@
 #include "output/OutputBase.h"
 #include <string>
 #include <string_view>
-#include <source_location>
-#include <format>
+#include <experimental/source_location>
+#include <fmt/format.h>
 #include <chrono>
 #include <filesystem>
 
@@ -33,36 +33,36 @@ namespace utl
 
     struct formatter
     {
-        using time_format_t = std::chrono::zoned_time<std::chrono::system_clock::duration, const std::chrono::time_zone*>;
-        static time_format_t get_time()
-        {
-            return std::chrono::zoned_time{ std::chrono::current_zone(), std::chrono::system_clock::now() };
-        }
+        //using time_format_t = std::chrono::zoned_time<std::chrono::system_clock::duration, const std::chrono::time_zone*>;
+        //static time_format_t get_time()
+        //{
+        //    return std::chrono::zoned_time{ std::chrono::current_zone(), std::chrono::system_clock::now() };
+        //}
+//
+        //static std::string get_formatted_datetime() 
+        //{ 
+        //    auto _time = get_time();
+        //    return std::format("{} {} {}", get_formatted_date(_time), get_formatted_time(_time), get_formatted_timezone());
+        //}
+//
+        //static std::string get_formatted_date(time_format_t _time = get_time()) 
+        //{ 
+        //    return std::format("{:%F}", _time); 
+        //}
+//
+        //static std::string get_formatted_time(time_format_t _time = get_time()) 
+        //{ 
+        //    auto time = std::format("{:%T}", _time);
+        //    time = time.erase(time.find('.'), time.size() - 1);
+        //    return time; 
+        //}
+//
+        //static std::string get_formatted_timezone(time_format_t _time = get_time()) 
+        //{ 
+        //    return std::format("{:%Z}", _time); 
+        //}
 
-        static std::string get_formatted_datetime() 
-        { 
-            auto _time = get_time();
-            return std::format("{} {} {}", get_formatted_date(_time), get_formatted_time(_time), get_formatted_timezone());
-        }
-
-        static std::string get_formatted_date(time_format_t _time = get_time()) 
-        { 
-            return std::format("{:%F}", _time); 
-        }
-
-        static std::string get_formatted_time(time_format_t _time = get_time()) 
-        { 
-            auto time = std::format("{:%T}", _time);
-            time = time.erase(time.find('.'), time.size() - 1);
-            return time; 
-        }
-
-        static std::string get_formatted_timezone(time_format_t _time = get_time()) 
-        { 
-            return std::format("{:%Z}", _time); 
-        }
-
-        static std::string get_source_path(const std::source_location& loc)
+        static std::string get_source_path(const std::experimental::source_location& loc)
         {
             #ifdef MAIN_PROJECT_DIRECTORY_PATH
             return std::filesystem::relative(loc.file_name(), MAIN_PROJECT_DIRECTORY_PATH).generic_string();
@@ -72,10 +72,10 @@ namespace utl
         }
         
         template<ELogLevel _level, class... _Args>
-        static std::string format(std::source_location&& loc, const std::string_view fmt, _Args&&... args)
+        static std::string format(std::experimental::source_location&& loc, const std::string_view fmt, _Args&&... args)
         {
-            auto _formatted_time = get_formatted_time();
-            auto _base = std::format("[{}] {} {} {}({}:{})", get_level<_level>(), _formatted_time, 
+            //auto _formatted_time = get_formatted_time();
+            auto _base = std::format("[{}] {} {}({}:{})", get_level<_level>(), 
             get_source_path(loc), loc.function_name(), loc.line(), loc.column());
             auto _user_log = std::vformat(fmt, std::make_format_args(std::forward<_Args>(args)...));
             return std::format("{} : {}", _base, _user_log);

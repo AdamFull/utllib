@@ -1,0 +1,3 @@
+[submodule "logger/fmt"]
+	path = logger/fmt
+	url = https://github.com/fmtlib/fmt.git

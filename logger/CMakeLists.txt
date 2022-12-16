@@ -1,7 +1,16 @@
 cmake_minimum_required(VERSION 3.19.1)
 project(utllogger)
 
-file(GLOB_RECURSE LOGGER_SOURCES *.cpp *.c *.cc *.h *.hpp)
+file(GLOB LOGGER_SOURCES *.cpp *.c *.cc *.h *.hpp)
+file(GLOB LOGGER_OUTPUT_SOURCES output/*.cpp output/*.c output/*.cc output/*.h output/*.hpp)
 
-add_library(${PROJECT_NAME} STATIC ${LOGGER_SOURCES})
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+add_subdirectory(fmt)
+
+add_library(${PROJECT_NAME} STATIC ${LOGGER_SOURCES} ${LOGGER_OUTPUT_SOURCES})
+
+target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
+
+target_include_directories(${PROJECT_NAME} 
+PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}"
+PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/fmt/include"
+)
