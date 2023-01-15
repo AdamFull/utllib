@@ -17,7 +17,7 @@ namespace utl
 		_Ty stop()
 		{
 			auto now = std::chrono::high_resolution_clock::now();
-			auto secs = std::chrono::duration<_Ty, std::milli>(now - sp).count();
+			auto secs = std::chrono::duration<_Ty, std::deca>(now - sp).count();
 			sp = now;
 			return secs;
 		}

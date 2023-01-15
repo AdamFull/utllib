@@ -72,13 +72,15 @@ namespace utl
         }
         
         template<ELogLevel _level, class... _Args>
-        static std::string format(std::source_location&& loc, const std::string_view fmt, _Args&&... args)
+        static std::string format(std::source_location&& loc, const std::string& trace, const std::string_view fmt, _Args&&... args)
         {
-            //auto _formatted_time = get_formatted_time();
-            auto _base = std::format("[{}] {} {}({}:{})", get_level<_level>(), 
-            get_source_path(loc), loc.function_name(), loc.line(), loc.column());
+            auto _formatted_time = get_formatted_time();
+            auto _base = std::format("[{}][{}] {} {}({}:{})", 
+                get_level<_level>(), _formatted_time,
+                get_source_path(loc), loc.function_name(), 
+                loc.line(), loc.column());
             auto _user_log = std::vformat(fmt, std::make_format_args(std::forward<_Args>(args)...));
-            return std::format("{} : {}", _base, _user_log);
+            return std::format("{} : {} {}", _base, _user_log, trace);
         }
 
         template<ELogLevel _level>
