@@ -173,6 +173,6 @@ __inline__ static void debugbreak(void)
 #endif /* ifdef _MSC_VER */
 
 #else
-#define debugbreak
+#define debugbreak()
 #endif
 #endif /* ifndef DEBUG_BREAK_H */
