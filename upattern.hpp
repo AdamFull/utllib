@@ -46,9 +46,19 @@ namespace utl
         }
     };
 
-    std::size_t constexpr const_hash(char const *input) 
+    constexpr uint32_t const_hash(char const *input)
     {
-        return *input ? static_cast<std::size_t>(*input) + 33 * const_hash(input + 1) : 5381;
+        return *input ? static_cast<uint32_t>(*input) + 33 * const_hash(input + 1) : 5381u;
+    }
+
+    constexpr uint32_t const_hash(char const* s, size_t count)
+    {
+        return ((count ? const_hash(s, count - 1) : 2166136261u) ^ s[count]) * 16777619u; // NOLINT (hicpp-signed-bitwise)
+    }
+
+    constexpr uint32_t operator "" _utl_hash(char const* s, std::size_t count)
+    {
+        return const_hash(s, count);
     }
 
     template<class _Kty>

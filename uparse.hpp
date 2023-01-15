@@ -10,6 +10,13 @@ namespace utl
         if (auto obj = json.find(name); obj != json.end())
             type = obj->get<_Ty>();
     }
+
+    template<class _Ty>
+    inline void serialize_from(const std::string& name, nlohmann::json& json, const _Ty& type, bool condition)
+    {
+        if (condition)
+            json[name] = type;
+    }
 }
 
 namespace nlohmann
