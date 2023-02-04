@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include "udetail.hpp"
 
 namespace utl
 {
@@ -46,35 +47,6 @@ namespace utl
         }
     };
 
-    constexpr uint32_t const_hash(char const *input)
-    {
-        return *input ? static_cast<uint32_t>(*input) + 33 * const_hash(input + 1) : 5381u;
-    }
-
-    constexpr uint32_t const_hash(char const* s, size_t count)
-    {
-        return ((count ? const_hash(s, count - 1) : 2166136261u) ^ s[count]) * 16777619u; // NOLINT (hicpp-signed-bitwise)
-    }
-
-    constexpr uint32_t operator "" _utl_hash(char const* s, std::size_t count)
-    {
-        return const_hash(s, count);
-    }
-
-    template<class _Kty>
-    constexpr std::size_t take_hash() noexcept
-    {
-        #ifdef __clang__
-            return const_hash(__PRETTY_FUNCTION__);
-        #elif defined(__GNUC__)
-            return const_hash(__PRETTY_FUNCTION__);
-        #elif defined(_MSC_VER)
-            return const_hash(__FUNCSIG__);
-        #else
-        #error "Unsupported compiler"
-        #endif
-    }
-
     template<class _Ty>
     class base_polymorphus
     {
@@ -106,7 +78,7 @@ namespace utl
     public:
         constexpr derived_polymorphus() noexcept { _Ty::delivered = self_hash; }
         virtual ~derived_polymorphus() = default;
-        static constexpr const size_t self_hash{take_hash<_Kty>()};
+        static constexpr const size_t self_hash{type_hash<_Kty>()};
     };
 
     template<class _Ty>
