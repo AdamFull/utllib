@@ -49,6 +49,19 @@ namespace utl
         return wrapped_name.substr(prefix_length, type_name_length);
     }
 
+    constexpr uint64_t fnv_prime = 1099511628211ull;
+    constexpr uint64_t fnv_offset_basis = 14695981039346656037ull;
+
+    constexpr inline uint64_t fnv1a_64_hash(const char* str, uint64_t hash = fnv_offset_basis) noexcept
+    {
+        while (*str != '\0')
+        {
+            hash = (hash ^ static_cast<uint64_t>(*str)) * fnv_prime;
+            str++;
+        }
+        return hash;
+    }
+
     constexpr inline uint32_t const_hash(char const* input) noexcept
     {
         return *input ? static_cast<uint32_t>(*input) + 33 * const_hash(input + 1) : 5381u;
