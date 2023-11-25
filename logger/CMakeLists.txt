@@ -8,7 +8,7 @@ file(GLOB LOGGER_OUTPUT_SOURCES output/*.cpp output/*.c output/*.cc output/*.h o
 
 add_library(${PROJECT_NAME} STATIC ${LOGGER_SOURCES} ${LOGGER_OUTPUT_SOURCES})
 
-target_link_libraries(main PRIVATE Backward::Backward)
+target_link_libraries(${PROJECT_NAME} PRIVATE Backward::Backward)
 
 target_include_directories(${PROJECT_NAME} 
 PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}"
