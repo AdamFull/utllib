@@ -8,7 +8,7 @@
 #include "output/OutputFile.h"
 #include "output/OutputWinCmd.h"
 
-#include "backward-cpp/backward.hpp"
+//#include "backward-cpp/backward.hpp"
 #include "debugbreak.h"
 
 namespace utl
@@ -52,18 +52,23 @@ namespace utl
 
 #define log_init(app_name, app_version) utl::CLogger::getInstance()->init(app_name, app_version);
 
+//#define log_error(fmt, ...) \
+//{ \
+//backward::StackTrace st; \
+//st.load_here(32); \
+//backward::Printer p; \
+//p.object = true; \
+//p.color_mode = backward::ColorMode::always; \
+//p.address = true; \
+//std::stringstream ss; \
+//ss << "\n"; \
+//p.print(st, ss); \
+//utl::CLogger::getInstance()->log<utl::ELogLevel::eError>(std::source_location::current(), ss.str(), fmt, __VA_ARGS__); \
+//debugbreak(); \
+//}
 #define log_error(fmt, ...) \
 { \
-backward::StackTrace st; \
-st.load_here(32); \
-backward::Printer p; \
-p.object = true; \
-p.color_mode = backward::ColorMode::always; \
-p.address = true; \
-std::stringstream ss; \
-ss << "\n"; \
-p.print(st, ss); \
-utl::CLogger::getInstance()->log<utl::ELogLevel::eError>(std::source_location::current(), ss.str(), fmt, __VA_ARGS__); \
+utl::CLogger::getInstance()->log<utl::ELogLevel::eError>(std::source_location::current(), "", fmt, __VA_ARGS__); \
 debugbreak(); \
 }
 #define log_cerror(cond, fmt, ...) if((!cond)) log_error(fmt, __VA_ARGS__)
