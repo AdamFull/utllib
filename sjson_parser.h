@@ -252,6 +252,12 @@ namespace sjson
 				tokens = tokenizer.tokenize();
 			}
 
+			sjson_parser(const std::vector<char>& input)
+			{
+				sjson_tokenizer tokenizer(std::string{input.begin(), input.end()});
+				tokens = tokenizer.tokenize();
+			}
+
 			sjson_object parse()
 			{
 				return parse_value();
@@ -363,6 +369,11 @@ namespace sjson
 	}
 
 	inline sjson_object parse(const std::string& data)
+	{
+		return parsing::sjson_parser(data).parse();
+	}
+
+	inline sjson_object parse(const std::vector<char>& data)
 	{
 		return parsing::sjson_parser(data).parse();
 	}
