@@ -45,7 +45,7 @@ namespace utl
     template<class _Ty, class _ReturnType = typename std::underlying_type<_Ty>::type>
     inline constexpr _ReturnType enum_cast(_Ty enum_value)
     {
-        return static_cast<_ReturnType>(enum_value);
+        return cast<_ReturnType>(enum_value);
     }
 
     constexpr inline const u32 packUint16x2(u16 lhs, u16 rhs)
@@ -249,7 +249,7 @@ namespace utl
     struct variable
     {
         static_assert(!std::is_same<T, avaliable_types_t>::value,
-            "Placed type is not avaliable. variable<T> support only types: int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t, bool, float, double.");
+            "Placed type is not avaliable. variable<T> support only types: int8_t, uint8_t, int16_t, uint16_t, i32, u32, int64_t, uint64_t, bool, f32, f64.");
 
     public:
         variable() = default;
@@ -390,7 +390,7 @@ namespace utl
             return _q.empty();
         }
 
-        size_t size() const
+        u64 size() const
         {
             return _q.size();
         }
@@ -445,36 +445,36 @@ namespace utl
         return wrapped_name.substr(prefix_length, type_name_length);
     }
 
-    constexpr u64 fnv_prime = 1099511628211ull;
-    constexpr u64 fnv_offset_basis = 14695981039346656037ull;
+    constexpr uint64_t fnv_prime = 1099511628211ull;
+    constexpr uint64_t fnv_offset_basis = 14695981039346656037ull;
 
-    constexpr inline u64 fnv1a_64_hash(const char* str, u64 hash = fnv_offset_basis) noexcept
+    constexpr inline uint64_t fnv1a_64_hash(const char* str, uint64_t hash = fnv_offset_basis) noexcept
     {
         while (*str != '\0')
         {
-            hash = (hash ^ static_cast<u64>(*str)) * fnv_prime;
+            hash = (hash ^ cast<uint64_t>(*str)) * fnv_prime;
             str++;
         }
         return hash;
     }
 
-    constexpr inline u32 const_hash(char const* input) noexcept
+    constexpr inline uint32_t const_hash(char const* input) noexcept
     {
-        return *input ? static_cast<u32>(*input) + 33 * const_hash(input + 1) : 5381u;
+        return *input ? cast<uint32_t>(*input) + 33 * const_hash(input + 1) : 5381u;
     }
 
-    constexpr inline u32 const_hash(char const* s, u64 count) noexcept
+    constexpr inline uint32_t const_hash(char const* s, uint64_t count) noexcept
     {
         return ((count ? const_hash(s, count - 1) : 2166136261u) ^ s[count]) * 16777619u; // NOLINT (hicpp-signed-bitwise)
     }
 
-    constexpr inline u32 operator "" _utl_hash(char const* s, u64 count) noexcept
+    constexpr inline uint32_t operator "" _utl_hash(char const* s, uint64_t count) noexcept
     {
         return const_hash(s, count);
     }
 
     template<class _Ty>
-    constexpr inline u32 type_hash() noexcept
+    constexpr inline uint32_t type_hash() noexcept
     {
         constexpr auto typestr = type_name<_Ty>();
         return const_hash(typestr.data());
@@ -496,7 +496,7 @@ namespace utl
         // constructors
         constexpr Flags() noexcept : m_mask(0) {}
 
-        constexpr Flags(BitType bit) noexcept : m_mask(static_cast<MaskType>(bit)) {}
+        constexpr Flags(BitType bit) noexcept : m_mask(cast<MaskType>(bit)) {}
 
         constexpr Flags(Flags<BitType> const& rhs) noexcept = default;
 
@@ -655,7 +655,7 @@ namespace utl
         constexpr _Kty* as() noexcept
         {
             if (is_same<_Kty>())
-                return static_cast<_Kty*>(this);
+                return cast<_Kty*>(this);
             return nullptr;
         }
 
@@ -806,6 +806,6 @@ constexpr utl::Flags<BitType> operator^(BitType bit, utl::Flags<BitType> const& 
 
 #define UTL_REGISTER_ENUM_CLASS_AS_FLAG_TYPE(FlagsName, EnumType) \
 using FlagsName = utl::Flags<EnumType>; \
-inline FlagsName operator|(EnumType a, EnumType b) { return FlagsName(static_cast<FlagsName::MaskType>(a) | static_cast<FlagsName::MaskType>(b)); } \
-inline FlagsName operator&(EnumType a, EnumType b) { return FlagsName(static_cast<FlagsName::MaskType>(a) & static_cast<FlagsName::MaskType>(b)); } \
-inline FlagsName operator^(EnumType a, EnumType b) { return FlagsName(static_cast<FlagsName::MaskType>(a) ^ static_cast<FlagsName::MaskType>(b)); }
+inline FlagsName operator|(EnumType a, EnumType b) { return FlagsName(utl::cast<FlagsName::MaskType>(a) | utl::cast<FlagsName::MaskType>(b)); } \
+inline FlagsName operator&(EnumType a, EnumType b) { return FlagsName(utl::cast<FlagsName::MaskType>(a) & utl::cast<FlagsName::MaskType>(b)); } \
+inline FlagsName operator^(EnumType a, EnumType b) { return FlagsName(utl::cast<FlagsName::MaskType>(a) ^ utl::cast<FlagsName::MaskType>(b)); }
