@@ -22,6 +22,6 @@ void COutputWinCmd::log(const std::string& message, ELogLevel eLevel)
 void COutputWinCmd::write(const std::string& write)
 {
 #ifdef _WIN32
-    OutputDebugString((write + "\n").c_str());
+    OutputDebugStringA((write + "\n").c_str());
 #endif
 }
