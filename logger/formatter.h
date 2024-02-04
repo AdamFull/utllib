@@ -34,35 +34,35 @@ namespace utl
     struct formatter
     {
         using time_format_t = std::chrono::zoned_time<std::chrono::system_clock::duration, const std::chrono::time_zone*>;
-        static time_format_t get_time()
+        static inline time_format_t get_time()
         {
             return std::chrono::zoned_time{ std::chrono::current_zone(), std::chrono::system_clock::now() };
         }
 
-        static std::string get_formatted_datetime() 
+        static inline std::string get_formatted_datetime()
         { 
             auto _time = get_time();
             return std::format("{} {} {}", get_formatted_date(_time), get_formatted_time(_time), get_formatted_timezone());
         }
 
-        static std::string get_formatted_date(time_format_t _time = get_time()) 
+        static inline std::string get_formatted_date(time_format_t _time = get_time())
         { 
             return std::format("{:%F}", _time); 
         }
 
-        static std::string get_formatted_time(time_format_t _time = get_time()) 
+        static inline std::string get_formatted_time(time_format_t _time = get_time())
         { 
             auto time = std::format("{:%T}", _time);
             time = time.erase(time.find('.'), time.size() - 1);
             return time; 
         }
 
-        static std::string get_formatted_timezone(time_format_t _time = get_time()) 
+        static inline std::string get_formatted_timezone(time_format_t _time = get_time())
         { 
             return std::format("{:%Z}", _time); 
         }
 
-        static std::string get_source_path(const std::source_location& loc)
+        static inline std::string get_source_path(const std::source_location& loc)
         {
             #ifdef MAIN_PROJECT_DIRECTORY_PATH
             return std::filesystem::relative(loc.file_name(), MAIN_PROJECT_DIRECTORY_PATH).generic_string();
@@ -70,34 +70,44 @@ namespace utl
             return loc.file_name();
             #endif
         }
+
+        static inline std::string get_source_info(std::source_location&& loc)
+        {
+            return std::format("{} {}({}:{})",
+                get_source_path(loc), loc.function_name(),
+                loc.line(), loc.column());
+        }
         
         template<ELogLevel _level, class... _Args>
-        static std::string format(std::source_location&& loc, const std::string& trace, const std::string_view fmt, _Args&&... args)
+        static inline std::string format(std::source_location&& loc, const std::string& trace, const std::string_view fmt, _Args&&... args)
         {
             auto _formatted_time = get_formatted_time();
-            auto _base = std::format("[{}][{}] {} {}({}:{})", 
-                get_level<_level>(), _formatted_time,
-                get_source_path(loc), loc.function_name(), 
-                loc.line(), loc.column());
+            auto _base = std::format("[{}][{}]", 
+                get_level<_level>(), _formatted_time);
             auto _user_log = std::vformat(fmt, std::make_format_args(std::forward<_Args>(args)...));
-            return std::format("{} : {} {}", _base, _user_log, trace);
+
+            std::string _trace_data{};
+            if constexpr(_level == ELogLevel::eError) 
+                _trace_data = std::format("\nCalled from function {}. \nStacktrace: {}", get_source_info(std::move(loc)), trace);
+
+            return std::format("{} : {}{}", _base, _user_log, _trace_data);
         }
 
         template<ELogLevel _level>
-        static constexpr const char* get_level()
+        static inline constexpr const char* get_level()
         {
             switch (_level)
             {
-            case ELogLevel::eDebug: return "debug";
-            case ELogLevel::eVerbose: return "verbose";
-            case ELogLevel::eInfo: return "info";
-            case ELogLevel::eWarning: return "warning";
-            case ELogLevel::eError: return "error";
+            case ELogLevel::eDebug: return "D";
+            case ELogLevel::eVerbose: return "V";
+            case ELogLevel::eInfo: return "I";
+            case ELogLevel::eWarning: return "W";
+            case ELogLevel::eError: return "E";
             }
-            return "none";
+            return "-";
         }
 
-        static constexpr std::string colorize(ELogLevel _level, const std::string& input)
+        static inline constexpr std::string colorize(ELogLevel _level, const std::string& input)
         {
             switch (_level)
             {
