@@ -1,18 +1,6 @@
 #pragma once
 
-#include <cstdint>
-#include <functional>
-#include <tuple>
-#include <variant>
-#include <optional>
-#include <string>
-#include <string_view>
-#include <chrono>
-#include <type_traits>
-#include <list>
-#include <queue>
-#include <unordered_set>
-#include <memory>
+#include "standart_library.h"
 
 #include "json.hpp"
 
@@ -23,17 +11,6 @@
 #include <compare>
 #endif
 
-using i8 = int8_t;
-using u8 = uint8_t;
-using i16 = int16_t;
-using u16 = uint16_t;
-using i32 = int32_t;
-using u32 = uint32_t;
-using i64 = int64_t;
-using u64 = uint64_t;
-using f32 = float;
-using f64 = double;
-
 namespace utl
 {
 	template<class _Ty, class _KTy>
@@ -42,7 +19,7 @@ namespace utl
 		return static_cast<_Ty>(object);
 	}
 
-    template<class _Ty, class _ReturnType = typename std::underlying_type<_Ty>::type>
+    template<class _Ty, class _ReturnType = typename stl::underlying_type<_Ty>::type>
     inline constexpr _ReturnType enum_cast(_Ty enum_value)
     {
         return cast<_ReturnType>(enum_value);
@@ -61,7 +38,7 @@ namespace utl
 
     // ----------------------BEGIN UFUNCTION----------------------
     /**
-     * @brief Implementation of a simple delegate based on the std::function functionality from
+     * @brief Implementation of a simple delegate based on the stl::function functionality from
      * the c++ standard library. Allows you to implement a functional object of a class
      * method or a static function for further invocation.
      *
@@ -70,7 +47,7 @@ namespace utl
     template <class _signature>
     class function
     {
-        using base_t = std::function<_signature>;
+        using base_t = stl::function<_signature>;
 
     public:
         function() = default;
@@ -84,7 +61,7 @@ namespace utl
         template <class _LabbdaFunction>
         function(_LabbdaFunction&& lfunc)
         {
-            attach(std::forward<_LabbdaFunction>(lfunc));
+            attach(stl::forward<_LabbdaFunction>(lfunc));
         }
 
         /**
@@ -139,7 +116,7 @@ namespace utl
         template <class _LabbdaFunction>
         inline void attach(_LabbdaFunction&& lfunc) noexcept
         {
-            m_pFunction = std::forward<_LabbdaFunction>(lfunc);
+            m_pFunction = stl::forward<_LabbdaFunction>(lfunc);
         }
 
         /**
@@ -152,7 +129,7 @@ namespace utl
         template <class _Class, class _ReturnType, class... _Types>
         inline void attach(_Class* c, _ReturnType(_Class::* m)(_Types...)) noexcept
         {
-            m_pFunction = std::move(make_delegate(c, m));
+            m_pFunction = stl::move(make_delegate(c, m));
         }
 
         operator bool() const
@@ -172,18 +149,18 @@ namespace utl
         /**
          * @brief Redefining the parenthesis operator for convenient delegate invocation
          *
-         * @tparam _Types Templated std::tuple arguments
+         * @tparam _Types Templated stl::tuple arguments
          * @param args Delegate arguments
          * @return auto
          */
         template <class... _Types>
         inline auto operator()(_Types &&...args)
         {
-            return m_pFunction(std::forward<_Types>(args)...);
+            return m_pFunction(stl::forward<_Types>(args)...);
         }
 
     private:
-        std::function<_signature> m_pFunction{ nullptr };
+        stl::function<_signature> m_pFunction{ nullptr };
 
         /**
          * @brief
@@ -193,13 +170,13 @@ namespace utl
          * @tparam ReturnType (set automatically in c++17) class type
          * @tparam _Types (set automatically in c++17) another arguments
          * @param m reference to function
-         * @return std::function<ReturnType(_Types...)>
+         * @return stl::function<ReturnType(_Types...)>
          */
         template <class _ReturnType, class... _Types>
-        inline std::function<_ReturnType(_Types...)> make_delegate(_ReturnType(*m)(_Types...)) noexcept
+        inline stl::function<_ReturnType(_Types...)> make_delegate(_ReturnType(*m)(_Types...)) noexcept
         {
             return [=](_Types &&...args)
-                { return (*m)(std::forward<_Types>(args)...); };
+                { return (*m)(stl::forward<_Types>(args)...); };
         }
 
         /**
@@ -212,13 +189,13 @@ namespace utl
          * @tparam _Types (set automatically in c++17)
          * @param c pointer to class
          * @param m reference to class method
-         * @return std::function<ReturnType(_Types...)>
+         * @return stl::function<ReturnType(_Types...)>
          */
         template <class _Class, class _ReturnType, class... _Types>
-        inline std::function<_ReturnType(_Types...)> make_delegate(_Class* c, _ReturnType(_Class::* m)(_Types...)) noexcept
+        inline stl::function<_ReturnType(_Types...)> make_delegate(_Class* c, _ReturnType(_Class::* m)(_Types...)) noexcept
         {
             return [=](_Types &&...args)
-                { return (c->*m)(std::forward<_Types>(args)...); };
+                { return (c->*m)(stl::forward<_Types>(args)...); };
         }
 
         /**
@@ -231,24 +208,24 @@ namespace utl
          * @tparam _Types (set automatically in c++17)
          * @param c const pointer to class
          * @param m reference to class method
-         * @return std::function<ReturnType(_Types...)>
+         * @return stl::function<ReturnType(_Types...)>
          */
         template <class _Class, class _ReturnType, class... _Types>
-        inline std::function<_ReturnType(_Types...)> make_delegate(const _Class* c, _ReturnType(_Class::* m)(_Types...) const) noexcept
+        inline stl::function<_ReturnType(_Types...)> make_delegate(const _Class* c, _ReturnType(_Class::* m)(_Types...) const) noexcept
         {
             return [=](_Types &&...args)
-                { return (c->*m)(std::forward<_Types>(args)...); };
+                { return (c->*m)(stl::forward<_Types>(args)...); };
         }
     };
     // ----------------------END UFUNCTION----------------------
 
     // ----------------------BEGIN REACTIVE VARIABLE----------------------
-    using avaliable_types_t = std::tuple<i8, u8, i16, u16, i32, u32, i64, u64, bool, f32, f64, std::string>;
+    using avaliable_types_t = stl::tuple<i8, u8, i16, u16, i32, u32, i64, u64, bool, f32, f64, stl::string>;
 
     template <class T>
     struct variable
     {
-        static_assert(!std::is_same<T, avaliable_types_t>::value,
+        static_assert(!stl::is_same<T, avaliable_types_t>::value,
             "Placed type is not avaliable. variable<T> support only types: int8_t, uint8_t, int16_t, uint16_t, i32, u32, int64_t, uint64_t, bool, f32, f64.");
 
     public:
@@ -257,16 +234,16 @@ namespace utl
         variable(const T& val) { value = val; }
 
         template <class... _Types>
-        variable(_Types... args) { bind(std::forward<_Types>(args)...); }
+        variable(_Types... args) { bind(stl::forward<_Types>(args)...); }
 
         ~variable() { notify = nullptr; }
 
-        inline const std::optional<T>& get() const { return value; }
+        inline const stl::optional<T>& get() const { return value; }
 
         template <class... _Types>
         void bind(_Types... args)
         {
-            notify = std::move(function<void(const T&, const T&)>(std::forward<_Types>(args)...));
+            notify = stl::move(function<void(const T&, const T&)>(stl::forward<_Types>(args)...));
         }
 
         inline T& operator=(const T& val) noexcept
@@ -287,21 +264,21 @@ namespace utl
 
     private:
         template <typename U = T>
-        typename std::enable_if<std::is_floating_point<U>::value, bool>::type
+        typename stl::enable_if<stl::is_floating_point<U>::value, bool>::type
             ncompare(const T& first, const T& second)
         {
-            return std::fabs(first - second) <= std::numeric_limits<T>::epsilon();
+            return stl::fabs(first - second) <= stl::numeric_limits<T>::epsilon();
         }
 
         template <typename U = T>
-        typename std::enable_if<!std::is_floating_point<U>::value, bool>::type
+        typename stl::enable_if<!stl::is_floating_point<U>::value, bool>::type
             ncompare(const T& first, const T& second)
         {
             return first == second;
         }
 
         T last_changed{ NULL };
-        std::optional<T> value{ T() };
+        stl::optional<T> value{ T() };
         function<void(const T&, const T&)> notify{ nullptr };
     };
 
@@ -319,16 +296,16 @@ namespace utl
     using react_f32 = variable<f32>;
     using react_f64 = variable<f64>;
 
-    using react_string = variable<std::string>;
+    using react_string = variable<stl::string>;
 
-    using variants = std::variant<react_i8, react_u8, react_i16, react_u16, react_i32, react_u32, react_i64, react_u64, react_bool, react_f32, react_f64, react_string>;
+    using variants = stl::variant<react_i8, react_u8, react_i16, react_u16, react_i32, react_u32, react_i64, react_u64, react_bool, react_f32, react_f64, react_string>;
 
     template <class T, class _variant>
     struct is_variant_type;
 
     template <class T, class... _Types>
-    struct is_variant_type<T, std::variant<_Types...>>
-        : public std::disjunction<std::is_same<T, _Types>...>
+    struct is_variant_type<T, stl::variant<_Types...>>
+        : public stl::disjunction<stl::is_same<T, _Types>...>
     {
     };
 
@@ -338,18 +315,18 @@ namespace utl
 
     class stopwatch
     {
-        using timepoint_t = std::chrono::steady_clock::time_point;
+        using timepoint_t = stl::chrono::steady_clock::time_point;
     public:
         stopwatch() noexcept
         {
-            sp = std::chrono::high_resolution_clock::now();
+            sp = stl::chrono::high_resolution_clock::now();
         }
 
         template<class _Ty>
         _Ty stop()
         {
-            auto now = std::chrono::high_resolution_clock::now();
-            auto secs = std::chrono::duration<_Ty>(now - sp).count();
+            auto now = stl::chrono::high_resolution_clock::now();
+            auto secs = stl::chrono::duration<_Ty>(now - sp).count();
             sp = now;
             return secs;
         }
@@ -395,22 +372,22 @@ namespace utl
             return _q.size();
         }
     private:
-        std::queue<_Ty> _q;
-        std::unordered_set<_Ty> _unique_values;
+        stl::queue<_Ty> _q;
+        stl::unordered_set<_Ty> _unique_values;
     };
 
     // ----------------------BEGIN REFLECTION/HASH----------------------
-    template <typename T> constexpr std::string_view type_name();
+    template <typename T> constexpr stl::string_view type_name();
 
     template <>
-    constexpr std::string_view type_name<void>() { return "void"; }
+    constexpr stl::string_view type_name<void>() { return "void"; }
 
     namespace detail
     {
         using type_name_prober = void;
 
         template <typename T>
-        constexpr inline std::string_view wrapped_type_name() noexcept
+        constexpr inline stl::string_view wrapped_type_name() noexcept
         {
 #ifdef __clang__
             return __PRETTY_FUNCTION__;
@@ -436,7 +413,7 @@ namespace utl
     } // namespace detail
 
     template <class _Ty>
-    constexpr inline std::string_view type_name()
+    constexpr inline stl::string_view type_name()
     {
         constexpr auto wrapped_name = detail::wrapped_type_name<_Ty>();
         constexpr auto prefix_length = detail::wrapped_type_name_prefix_length();
@@ -491,7 +468,7 @@ namespace utl
     class Flags
     {
     public:
-        using MaskType = typename std::underlying_type<BitType>::type;
+        using MaskType = typename stl::underlying_type<BitType>::type;
 
         // constructors
         constexpr Flags() noexcept : m_mask(0) {}
@@ -635,11 +612,11 @@ namespace utl
     class singleton : public non_copy_movable
     {
     public:
-        static inline const std::unique_ptr<_Ty>& getInstance()
+        static inline const stl::unique_ptr<_Ty>& getInstance()
         {
-            static std::unique_ptr<_Ty> _instance;
+            static stl::unique_ptr<_Ty> _instance;
             if (!_instance)
-                _instance = std::make_unique<_Ty>();
+                _instance = stl::make_unique<_Ty>();
             return _instance;
         }
     };
@@ -703,20 +680,20 @@ namespace utl
         }
 
     protected:
-        std::list<_Ty*> vObservers;
+        stl::list<_Ty*> vObservers;
         _Kty notificationData;
     };
     // ----------------------END PATTERN----------------------
 
     template<class _Ty>
-    inline void parse_to(const std::string& name, const nlohmann::json& json, _Ty& type)
+    inline void parse_to(const stl::string& name, const nlohmann::json& json, _Ty& type)
     {
         if (auto obj = json.find(name); obj != json.end())
             type = obj->get<_Ty>();
     }
 
     template<class _Ty>
-    inline void serialize_from(const std::string& name, nlohmann::json& json, const _Ty& type, bool condition)
+    inline void serialize_from(const stl::string& name, nlohmann::json& json, const _Ty& type, bool condition)
     {
         if (condition)
             json[name] = type;
@@ -726,9 +703,9 @@ namespace utl
 namespace nlohmann
 {
     template <typename _Ty>
-    struct adl_serializer<std::optional<_Ty>>
+    struct adl_serializer<stl::optional<_Ty>>
     {
-        static void to_json(json& j, const std::optional<_Ty>& opt)
+        static void to_json(json& j, const stl::optional<_Ty>& opt)
         {
             if (!opt.has_value())
                 j = nullptr;
@@ -736,10 +713,10 @@ namespace nlohmann
                 j = opt.value();
         }
 
-        static void from_json(const json& j, std::optional<_Ty>& opt)
+        static void from_json(const json& j, stl::optional<_Ty>& opt)
         {
             if (j.is_null())
-                opt = std::nullopt;
+                opt = stl::nullopt;
             else
                 opt = j.get<_Ty>();
         }

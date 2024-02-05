@@ -5,7 +5,13 @@ set(UTILITY_SOURCES_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../)
 
 file(GLOB UTILITY_MEMORY_SOURCES ${UTILITY_SOURCES_PATH}*.cpp ${UTILITY_SOURCES_PATH}*.hpp ${UTILITY_SOURCES_PATH}*.h)
 
+find_package(mimalloc REQUIRED NO_SYSTEM_ENVIRONMENT_PATH)
+
 add_subdirectory(${UTILITY_SOURCES_PATH}logger/buildsystem/cmake logger)
 
 add_library(${PROJECT_NAME} ${UTILITY_MEMORY_SOURCES})
-target_link_libraries(${PROJECT_NAME} PUBLIC utllogger)
+
+target_link_libraries(${PROJECT_NAME} 
+	PUBLIC utllogger
+	PUBLIC mimalloc
+)
