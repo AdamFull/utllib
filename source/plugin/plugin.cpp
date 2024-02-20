@@ -1,4 +1,5 @@
 #include "plugin.h"
+#include <utils/hash.h>
 
 using namespace utl::plugin_system;
 
@@ -10,6 +11,10 @@ typedef struct IMAGE_RELOCATION_ENTRY {
 	WORD Offset : 12;
 	WORD Type : 4;
 } IMAGE_RELOCATION_ENTRY, * PIMAGE_RELOCATION_ENTRY;
+
+#include <dbghelp.h>
+
+#pragma comment(lib, "dbghelp.lib")
 #endif
 
 uplugin::~uplugin()
@@ -102,6 +107,8 @@ bool uplugin::load(const stl::vector<u8>& data)
 	if (!lpImageImportDescriptor)
 		return false;
 
+
+	// Import other symbols
 	while (lpImageImportDescriptor->Name != 0)
 	{
 		const auto lpLibraryName = (LPSTR)((DWORD_PTR)m_pModule + lpImageImportDescriptor->Name);
@@ -116,14 +123,12 @@ bool uplugin::load(const stl::vector<u8>& data)
 			{
 				const auto functionOrdinal = (UINT)IMAGE_ORDINAL(lpThunkData->u1.Ordinal);
 				lpThunkData->u1.Function = (DWORD_PTR)GetProcAddress(hModule, MAKEINTRESOURCEA(functionOrdinal));
-				printf("[+]\tFunction Ordinal %u\n", functionOrdinal);
 			}
 			else
 			{
 				const auto lpData = (PIMAGE_IMPORT_BY_NAME)((DWORD_PTR)m_pModule + lpThunkData->u1.AddressOfData);
 				const auto functionAddress = (DWORD_PTR)GetProcAddress(hModule, lpData->Name);
 				lpThunkData->u1.Function = functionAddress;
-				printf("[+]\tFunction %s\n", (LPSTR)lpData->Name);
 			}
 
 			lpThunkData++;
@@ -151,11 +156,15 @@ bool uplugin::load(const stl::vector<u8>& data)
 		const auto lpImageExportDirectory = (PIMAGE_EXPORT_DIRECTORY)((DWORD_PTR)m_pModule + lpImageNTHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress);
 		m_vFunctionTable.resize(lpImageExportDirectory->NumberOfNames);
 
+		char lpCurrentFnctionNameDemangled[1024]{ 0 };
 		for (int i = 0; i < (int)lpImageExportDirectory->NumberOfNames; i++)
 		{
 			const auto lpCurrentFunctionName = (LPSTR)(((DWORD*)(lpImageExportDirectory->AddressOfNames + (DWORD_PTR)m_pModule))[i] + (DWORD_PTR)m_pModule);
 			const auto lpCurrentOridnal = ((WORD*)(lpImageExportDirectory->AddressOfNameOrdinals + (DWORD_PTR)m_pModule))[i];
 			const auto addRVA = ((DWORD*)((DWORD_PTR)m_pModule + lpImageExportDirectory->AddressOfFunctions))[lpCurrentOridnal];
+			UnDecorateSymbolName(lpCurrentFunctionName, lpCurrentFnctionNameDemangled, sizeof(lpCurrentFnctionNameDemangled), UNDNAME_COMPLETE);
+
+			m_tableMap[utils::fnv1a_64_hash(lpCurrentFnctionNameDemangled)] = lpCurrentOridnal;
 			m_vFunctionTable.at(lpCurrentOridnal) = ((DWORD_PTR)m_pModule + addRVA);
 		}
 	}
@@ -187,8 +196,6 @@ bool uplugin::unload()
 			lpImageCallback(m_pModule, DLL_PROCESS_DETACH, nullptr);
 			lpCallbackArray++;
 		}
-
-		printf("[+] TLS callbacks executed (DLL_PROCESS_DETACH).\n");
 	}
 
 	const auto main = (dllmain)((DWORD_PTR)m_pModule + lpImageNTHeader->OptionalHeader.AddressOfEntryPoint);
@@ -200,4 +207,18 @@ bool uplugin::unload()
 #endif
 
 	return true;
+}
+
+intptr_t uplugin::getFunctionAddress(const char* function_name)
+{
+	auto hash = utils::fnv1a_64_hash(function_name);
+	if (auto found = m_tableMap.find(hash); found != m_tableMap.end())
+		return getFunctionAddress(found->second);
+
+	return static_cast<intptr_t>(0);
+}
+
+intptr_t uplugin::getFunctionAddress(u64 function_index)
+{
+	return m_vFunctionTable.at(function_index);
 }

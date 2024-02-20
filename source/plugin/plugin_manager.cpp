@@ -1,5 +1,7 @@
 #include "plugin_manager.h"
 
+#include <utils/hash.h>
+
 using namespace utl::plugin_system;
 
 uplugin_manager::uplugin_manager()
@@ -12,7 +14,7 @@ uplugin_manager::~uplugin_manager()
 	unloadAll();
 }
 
-const stl::unique_ptr<uplugin>& uplugin_manager::load(const stl::string& path)
+const stl::unique_ptr<uplugin>& uplugin_manager::load(const char* name, const stl::string& path)
 {
 	static stl::unique_ptr<uplugin> empty{ nullptr };
 
@@ -22,22 +24,30 @@ const stl::unique_ptr<uplugin>& uplugin_manager::load(const stl::string& path)
 	stl::vector<u8> data{};
 	if (m_pFSWrapper->fread(path, data))
 	{
-		auto& new_plugin = m_vLoadedPluggins.emplace_back(stl::make_unique<uplugin>());
-		if (!new_plugin->load(data))
+		auto new_plugin = stl::make_unique<uplugin>();
+		if (new_plugin->load(data))
 		{
-			m_vLoadedPluggins.pop_back();
-			return empty;
+			auto name_hash = utils::fnv1a_64_hash(name);
+			m_pluginMap.emplace(name_hash, std::move(new_plugin));
+			return m_pluginMap[name_hash];
 		}
-
-		return new_plugin;
 	}
 
 	return empty;
 }
 
+void uplugin_manager::unload(const char* name)
+{
+	if (auto found = m_pluginMap.find(utils::fnv1a_64_hash(name)); found != m_pluginMap.end())
+	{
+		found->second->unload();
+		m_pluginMap.erase(found);
+	}
+}
+
 void uplugin_manager::unloadAll()
 {
-	for (auto& plugin : m_vLoadedPluggins)
+	for (auto& [name_hash, plugin] : m_pluginMap)
 		plugin->unload();
-	m_vLoadedPluggins.clear();
+	m_pluginMap.clear();
 }
