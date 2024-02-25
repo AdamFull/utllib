@@ -1,5 +1,6 @@
 #include "container/flags.h"
 #include "container/unique_queue.h"
+#include "container/vector_view.hpp"
 
 #include "debugging/debugbreak.h"
 #include "debugging/stacktrace.h"

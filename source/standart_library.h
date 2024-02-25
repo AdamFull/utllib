@@ -4,6 +4,9 @@
 #include <cstdint>
 #include <format>
 #include <fstream>
+#include <typeindex>
+
+#include <cassert>
 
 #include <mimalloc.h>
 
