@@ -53,6 +53,10 @@ namespace utl
 
 #define log_init(app_name, app_version) utl::logger::CLogger::getInstance()->init(app_name, app_version);
 
+#define log_declare_scope_name(name) \
+constexpr const char* utl_logger_scope = name; \
+static_assert(__INCLUDE_LEVEL__ == 0, "log_declare_scope should not be used in header files!")
+
 //#define log_error(fmt, ...) \
 //{ \
 //backward::StackTrace st; \
