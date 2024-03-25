@@ -58,7 +58,7 @@ llsocket_error make_address_info(struct addrinfo** ainfo, const _AddressType& ad
 
 	std::memcpy(*ainfo, &hints, sizeof(hints));
 
-	(*ainfo)->ai_addr = (_SockAddrType*)addr;
+	(*ainfo)->ai_addr = (struct sockaddr*)addr;
 	(*ainfo)->ai_addrlen = sizeof(_SockAddrType);
 
 	return llsocket_error::ok;
