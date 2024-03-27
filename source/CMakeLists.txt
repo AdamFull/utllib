@@ -6,7 +6,6 @@ add_subdirectory(debugging)
 add_subdirectory(design_pattern)
 add_subdirectory(filesystem)
 add_subdirectory(logger)
-#add_subdirectory(networking)
 add_subdirectory(parsing)
 add_subdirectory(plugin)
 add_subdirectory(reactive)
@@ -24,7 +23,6 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE utility_design_pattern
     PRIVATE utility_filesystem
     PRIVATE utility_logger
-    #PRIVATE utility_networking
     PRIVATE utility_parsing
     PRIVATE utility_plugin
     PRIVATE utility_reactive
