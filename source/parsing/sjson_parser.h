@@ -410,4 +410,15 @@ namespace sjson
 			value.emplace_back(data);
 		}
 	}
+
+	template<class _Ty>
+	inline void deserialize(const sjson_object& sjson, std::unordered_map<std::string, _Ty>& value)
+	{
+		for (auto& [name, object] : sjson._objects)
+		{
+			_Ty data;
+			deserialize(object, data);
+			value.emplace(name, data);
+		}
+	}
 }

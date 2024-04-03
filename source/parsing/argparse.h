@@ -107,9 +107,6 @@ namespace utl
 			{
 				_Ty result;
 
-				if (parsed.find(key) == parsed.end())
-					throw std::invalid_argument("Argument " + key + " not found.");
-
 				const auto& svalue = parsed[key];
 				if constexpr (std::is_same_v<_Ty, std::string>)
 					return svalue;
