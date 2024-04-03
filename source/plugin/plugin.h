@@ -3,7 +3,10 @@
 #include <standart_library.h>
 
 #ifdef _WIN32
-#include <Windows.h>
+#define NOMINMAX
+#include <windows.h>
+#undef min
+#undef max
 #endif
 
 namespace utl
