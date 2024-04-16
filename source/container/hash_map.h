@@ -89,6 +89,51 @@ namespace utl
                 insert(*it);
         }
 
+        hash_map(const hash_map& other) 
+            : hash_map(other, other.buckets_.size())
+        {
+        }
+
+        hash_map& operator=(const hash_map& other)
+        {
+            //if (this != &other)
+            //{
+            //    clear();
+            //    buckets_.resize(other.buckets_.size(), nullptr);
+            //    for (auto it = other.begin(); it != other.end(); ++it)
+            //        insert(*it);
+            //}
+            //return *this;
+
+            if (this != &other)
+            {
+                hash_map tmp(other);
+                swap(tmp);
+            }
+            return *this;
+        }
+
+        ~hash_map()
+        {
+            for (auto& b : buckets_)
+            {
+                if (b)
+                {
+                    delete b;
+                    b = nullptr;
+                }
+            }
+
+            for (auto& f : freed_)
+            {
+                if (f)
+                {
+                    delete f;
+                    f = nullptr;
+                }
+            }
+        }
+
         allocator_type get_allocator() const noexcept { return buckets_.get_allocator(); }
 
         // Iterators
@@ -188,12 +233,12 @@ namespace utl
                 if (key_equal()(bucket, nullptr))
                 {
                     bucket = make_node();
-                    bucket->second = mapped_type(std::forward<_Args>(args)...);
+                    bucket->second = std::move(mapped_type(std::forward<_Args>(args)...));
                     bucket->first = key;
                     size_++;
                     return { iterator(this, idx), true };
                 }
-                else if (key_equal()(buckets_[idx]->first, key)) 
+                else if (key_equal()(bucket->first, key))
                     return { iterator(this, idx), false };
             }
         }
@@ -203,21 +248,21 @@ namespace utl
             size_t bucket_idx = it.idx_;
             for (size_t idx = probe_next(bucket_idx);; idx = probe_next(idx))
             {
-                auto& bucket = buckets_[idx];
-                if (key_equal()(buckets_[idx], nullptr)) 
+                auto& cur_bucket = buckets_[bucket_idx];
+                auto& next_bucket = buckets_[idx];
+                if (key_equal()(next_bucket, nullptr))
                 {
-                    freed_.emplace_back(bucket);
-                    bucket = nullptr;
+                    freed_.emplace_back(cur_bucket);
+                    cur_bucket = nullptr;
 
                     size_--;
                     return;
                 }
-
-                size_t ideal = key_to_idx(buckets_[idx]->first);
+                size_t ideal = key_to_idx(next_bucket->first);
                 if (diff(bucket_idx, ideal) < diff(idx, ideal))
                 {
                     // swap, bucket is closer to ideal than idx
-                    bucket = buckets_[idx];
+                    cur_bucket = next_bucket;
                     bucket_idx = idx;
                 }
             }
