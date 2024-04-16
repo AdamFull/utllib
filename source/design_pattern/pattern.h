@@ -39,11 +39,11 @@ namespace utl
         class singleton : public non_copy_movable
         {
         public:
-            static inline const stl::unique_ptr<_Ty>& getInstance()
+            static inline const std::unique_ptr<_Ty>& getInstance()
             {
-                static stl::unique_ptr<_Ty> _instance;
+                static std::unique_ptr<_Ty> _instance;
                 if (!_instance)
-                    _instance = stl::make_unique<_Ty>();
+                    _instance = std::make_unique<_Ty>();
                 return _instance;
             }
         };
@@ -107,7 +107,7 @@ namespace utl
             }
 
         protected:
-            stl::list<_Ty*> vObservers;
+            std::list<_Ty*> vObservers;
             _Kty notificationData;
         };
 	}

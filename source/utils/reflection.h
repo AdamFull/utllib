@@ -6,17 +6,17 @@ namespace utl
 {
 	namespace utils
 	{
-        template <typename T> constexpr stl::string_view type_name();
+        template <typename T> constexpr std::string_view type_name();
 
         template <>
-        constexpr stl::string_view type_name<void>() { return "void"; }
+        constexpr std::string_view type_name<void>() { return "void"; }
 
         namespace detail
         {
             using type_name_prober = void;
 
             template <typename T>
-            constexpr inline stl::string_view wrapped_type_name() noexcept
+            constexpr inline std::string_view wrapped_type_name() noexcept
             {
 #ifdef __clang__
                 return __PRETTY_FUNCTION__;
@@ -42,7 +42,7 @@ namespace utl
         } // namespace detail
 
         template <class _Ty>
-        constexpr inline stl::string_view type_name()
+        constexpr inline std::string_view type_name()
         {
             constexpr auto wrapped_name = detail::wrapped_type_name<_Ty>();
             constexpr auto prefix_length = detail::wrapped_type_name_prefix_length();

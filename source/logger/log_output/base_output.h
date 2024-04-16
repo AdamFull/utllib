@@ -26,11 +26,11 @@ namespace utl
         {
         public:
             virtual ~COutputBase() = default;
-            virtual void init(const stl::string& app_name, const stl::string& app_version);
-            virtual void log(const stl::string& message, ELogLevel eLevel) = 0;
+            virtual void init(const std::string& app_name, const std::string& app_version);
+            virtual void log(const std::string& message, ELogLevel eLevel) = 0;
 
         protected:
-            virtual void write(const stl::string& write) = 0;
+            virtual void write(const std::string& write) = 0;
         };
 	}
 }

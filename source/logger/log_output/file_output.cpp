@@ -2,9 +2,9 @@
 
 using namespace utl::logger;
 
-COutputFile::COutputFile(const stl::string& filepath)
+COutputFile::COutputFile(const std::string& filepath)
 {
-    file.open(filepath, stl::ios_base::out | stl::ios_base::binary);
+    file.open(filepath, std::ios_base::out | std::ios_base::binary);
 }
 
 COutputFile::~COutputFile()
@@ -13,13 +13,13 @@ COutputFile::~COutputFile()
         file.close();
 }
 
-void COutputFile::log(const stl::string& message, ELogLevel eLevel)
+void COutputFile::log(const std::string& message, ELogLevel eLevel)
 {
     write(message);
 }
 
-void COutputFile::write(const stl::string& write)
+void COutputFile::write(const std::string& write)
 {
-    file << write << stl::endl;
+    file << write << std::endl;
     file.flush();
 }

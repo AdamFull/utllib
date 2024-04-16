@@ -13,12 +13,12 @@ COutputWinCmd::~COutputWinCmd()
 
 }
 
-void COutputWinCmd::log(const stl::string& message, ELogLevel eLevel)
+void COutputWinCmd::log(const std::string& message, ELogLevel eLevel)
 {
     write(message);
 }
 
-void COutputWinCmd::write(const stl::string& write)
+void COutputWinCmd::write(const std::string& write)
 {
 #ifdef _WIN32
     OutputDebugStringA((write + "\n").c_str());

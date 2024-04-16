@@ -4,7 +4,7 @@
 
 using namespace utl::logger;
 
-void COutputBase::init(const stl::string& app_name, const stl::string& app_version)
+void COutputBase::init(const std::string& app_name, const std::string& app_version)
 {
     write("#Software: " + app_name);
     write("#Version: " + app_version);

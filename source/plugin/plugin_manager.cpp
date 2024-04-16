@@ -14,17 +14,17 @@ uplugin_manager::~uplugin_manager()
 	unloadAll();
 }
 
-const stl::unique_ptr<uplugin>& uplugin_manager::load(const char* name, const stl::string& path)
+const std::unique_ptr<uplugin>& uplugin_manager::load(const char* name, const std::string& path)
 {
-	static stl::unique_ptr<uplugin> empty{ nullptr };
+	static std::unique_ptr<uplugin> empty{ nullptr };
 
 	if (!m_pFSWrapper)
-		m_pFSWrapper = stl::make_unique<filesystem::basic_filesystem_wrapper>();
+		m_pFSWrapper = std::make_unique<filesystem::basic_filesystem_wrapper>();
 
-	stl::vector<u8> data{};
+	std::vector<u8> data{};
 	if (m_pFSWrapper->fread(path, data))
 	{
-		auto new_plugin = stl::make_unique<uplugin>();
+		auto new_plugin = std::make_unique<uplugin>();
 		if (new_plugin->load(data))
 		{
 			auto name_hash = utils::fnv1a_64_hash(name);

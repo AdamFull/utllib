@@ -10,7 +10,7 @@ COutputCOUT::~COutputCOUT()
 
 }
 
-void COutputCOUT::log(const stl::string& message, ELogLevel eLevel)
+void COutputCOUT::log(const std::string& message, ELogLevel eLevel)
 {
 #ifdef UTILITY_LOGGER_USE_COLORIZE_OUTPUT
     write(formatter::colorize(eLevel, message));
@@ -19,7 +19,7 @@ void COutputCOUT::log(const stl::string& message, ELogLevel eLevel)
 #endif
 }
 
-void COutputCOUT::write(const stl::string& write)
+void COutputCOUT::write(const std::string& write)
 {
-    stl::cout << write << stl::endl;
+    std::cout << write << std::endl;
 }

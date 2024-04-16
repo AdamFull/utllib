@@ -23,7 +23,7 @@ uplugin::~uplugin()
 		unload();
 }
 
-bool uplugin::load(const stl::vector<u8>& data)
+bool uplugin::load(const std::vector<u8>& data)
 {
 	if (data.empty())
 		return false;

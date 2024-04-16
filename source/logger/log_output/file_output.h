@@ -9,14 +9,14 @@ namespace utl
         class COutputFile : public COutputBase
         {
         public:
-            COutputFile(const stl::string& filepath);
+            COutputFile(const std::string& filepath);
             virtual ~COutputFile() override;
-            void log(const stl::string& message, ELogLevel eLevel) override;
+            void log(const std::string& message, ELogLevel eLevel) override;
 
         protected:
-            void write(const stl::string& write) override;
+            void write(const std::string& write) override;
         private:
-            stl::ofstream file;
+            std::ofstream file;
         };
     }
 }

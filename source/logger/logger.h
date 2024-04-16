@@ -18,38 +18,38 @@ namespace utl
         protected:
             CLogger() = default;
         public:
-            friend stl::unique_ptr<CLogger> stl::make_unique<CLogger>();
+            friend std::unique_ptr<CLogger> std::make_unique<CLogger>();
 
-            static const stl::unique_ptr<CLogger>& getInstance()
+            static const std::unique_ptr<CLogger>& getInstance()
             {
-                static stl::unique_ptr<CLogger> instance{ nullptr };
+                static std::unique_ptr<CLogger> instance{ nullptr };
                 if (!instance)
-                    instance = stl::make_unique<CLogger>();
+                    instance = std::make_unique<CLogger>();
                 return instance;
             }
 
-            void init(const stl::string& app_name, const stl::string& app_version);
+            void init(const std::string& app_name, const std::string& app_version);
 
-            void addOutput(stl::shared_ptr<COutputBase>&& output);
+            void addOutput(std::shared_ptr<COutputBase>&& output);
 
             template<ELogLevel _level = ELogLevel::eDebug, class ..._Args>
-            void log(stl::source_location&& loc, const stl::string& trace, const stl::string_view fmt, _Args&&... args)
+            void log(std::source_location&& loc, const std::string& trace, const std::string_view fmt, _Args&&... args)
             {
-                auto formatted = formatter::format<_level>(stl::move(loc), trace, fmt, stl::forward<_Args>(args)...);
+                auto formatted = formatter::format<_level>(std::move(loc), trace, fmt, std::forward<_Args>(args)...);
 
                 for (auto& output : vOutputs)
                     output->log(formatted, _level);
             }
 
         private:
-            stl::vector<stl::shared_ptr<COutputBase>> vOutputs;
+            std::vector<std::shared_ptr<COutputBase>> vOutputs;
         };
     }
 }
 
-#define log_add_file_output(filename) utl::logger::CLogger::getInstance()->addOutput(stl::make_shared<utl::logger::COutputFile>(filename))
-#define log_add_cout_output() utl::logger::CLogger::getInstance()->addOutput(stl::make_shared<utl::logger::COutputCOUT>())
-#define log_add_wincmd_output() utl::logger::CLogger::getInstance()->addOutput(stl::make_shared<utl::logger::COutputWinCmd>())
+#define log_add_file_output(filename) utl::logger::CLogger::getInstance()->addOutput(std::make_shared<utl::logger::COutputFile>(filename))
+#define log_add_cout_output() utl::logger::CLogger::getInstance()->addOutput(std::make_shared<utl::logger::COutputCOUT>())
+#define log_add_wincmd_output() utl::logger::CLogger::getInstance()->addOutput(std::make_shared<utl::logger::COutputWinCmd>())
 
 #define log_init(app_name, app_version) utl::logger::CLogger::getInstance()->init(app_name, app_version);
 
@@ -65,25 +65,25 @@ static_assert(__INCLUDE_LEVEL__ == 0, "log_declare_scope should not be used in h
 //p.object = true; \
 //p.color_mode = backward::ColorMode::always; \
 //p.address = true; \
-//stl::stringstream ss; \
+//std::stringstream ss; \
 //ss << "\n"; \
 //p.print(st, ss); \
-//utl::logger::CLogger::getInstance()->log<utl::logger::ELogLevel::eError>(stl::source_location::current(), ss.str(), fmt, __VA_ARGS__); \
+//utl::logger::CLogger::getInstance()->log<utl::logger::ELogLevel::eError>(std::source_location::current(), ss.str(), fmt, __VA_ARGS__); \
 //debugbreak(); \
 //}
 #define log_error(fmt, ...) \
 { \
-utl::logger::CLogger::getInstance()->log<utl::logger::ELogLevel::eError>(stl::source_location::current(), "", fmt, __VA_ARGS__); \
+utl::logger::CLogger::getInstance()->log<utl::logger::ELogLevel::eError>(std::source_location::current(), "", fmt, __VA_ARGS__); \
 debugbreak(); \
 }
 #define log_cerror(cond, fmt, ...) if((!cond)) log_error(fmt, __VA_ARGS__)
-#define log_warning(fmt, ...) utl::logger::CLogger::getInstance()->log<utl::logger::ELogLevel::eWarning>(stl::source_location::current(), "", fmt, __VA_ARGS__)
-#define log_info(fmt, ...) utl::logger::CLogger::getInstance()->log<utl::logger::ELogLevel::eInfo>(stl::source_location::current(), "", fmt, __VA_ARGS__)
+#define log_warning(fmt, ...) utl::logger::CLogger::getInstance()->log<utl::logger::ELogLevel::eWarning>(std::source_location::current(), "", fmt, __VA_ARGS__)
+#define log_info(fmt, ...) utl::logger::CLogger::getInstance()->log<utl::logger::ELogLevel::eInfo>(std::source_location::current(), "", fmt, __VA_ARGS__)
 
 #ifdef NDEBUG
 #define log_verbose(fmt, ...)
 #define log_debug(fmt, ...)
 #else
-#define log_verbose(fmt, ...) utl::logger::CLogger::getInstance()->log<utl::logger::ELogLevel::eVerbose>(stl::source_location::current(), "", fmt, __VA_ARGS__)
-#define log_debug(fmt, ...) utl::logger::CLogger::getInstance()->log<utl::logger::ELogLevel::eDebug>(stl::source_location::current(), "", fmt, __VA_ARGS__)
+#define log_verbose(fmt, ...) utl::logger::CLogger::getInstance()->log<utl::logger::ELogLevel::eVerbose>(std::source_location::current(), "", fmt, __VA_ARGS__)
+#define log_debug(fmt, ...) utl::logger::CLogger::getInstance()->log<utl::logger::ELogLevel::eDebug>(std::source_location::current(), "", fmt, __VA_ARGS__)
 #endif

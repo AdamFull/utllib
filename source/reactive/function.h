@@ -7,7 +7,7 @@ namespace utl
 	namespace reactive
 	{
         /**
-        * @brief Implementation of a simple delegate based on the stl::function functionality from
+        * @brief Implementation of a simple delegate based on the std::function functionality from
         * the c++ standard library. Allows you to implement a functional object of a class
         * method or a static function for further invocation.
         *
@@ -16,7 +16,7 @@ namespace utl
         template <class _signature>
         class function
         {
-            using base_t = stl::function<_signature>;
+            using base_t = std::function<_signature>;
 
         public:
             function() = default;
@@ -30,7 +30,7 @@ namespace utl
             template <class _LabbdaFunction>
             function(_LabbdaFunction&& lfunc)
             {
-                attach(stl::forward<_LabbdaFunction>(lfunc));
+                attach(std::forward<_LabbdaFunction>(lfunc));
             }
 
             /**
@@ -85,7 +85,7 @@ namespace utl
             template <class _LabbdaFunction>
             inline void attach(_LabbdaFunction&& lfunc) noexcept
             {
-                m_pFunction = stl::forward<_LabbdaFunction>(lfunc);
+                m_pFunction = std::forward<_LabbdaFunction>(lfunc);
             }
 
             /**
@@ -98,7 +98,7 @@ namespace utl
             template <class _Class, class _ReturnType, class... _Types>
             inline void attach(_Class* c, _ReturnType(_Class::* m)(_Types...)) noexcept
             {
-                m_pFunction = stl::move(make_delegate(c, m));
+                m_pFunction = std::move(make_delegate(c, m));
             }
 
             operator bool() const
@@ -118,18 +118,18 @@ namespace utl
             /**
              * @brief Redefining the parenthesis operator for convenient delegate invocation
              *
-             * @tparam _Types Templated stl::tuple arguments
+             * @tparam _Types Templated std::tuple arguments
              * @param args Delegate arguments
              * @return auto
              */
             template <class... _Types>
             inline auto operator()(_Types &&...args)
             {
-                return m_pFunction(stl::forward<_Types>(args)...);
+                return m_pFunction(std::forward<_Types>(args)...);
             }
 
         private:
-            stl::function<_signature> m_pFunction{ nullptr };
+            std::function<_signature> m_pFunction{ nullptr };
 
             /**
              * @brief
@@ -139,13 +139,13 @@ namespace utl
              * @tparam ReturnType (set automatically in c++17) class type
              * @tparam _Types (set automatically in c++17) another arguments
              * @param m reference to function
-             * @return stl::function<ReturnType(_Types...)>
+             * @return std::function<ReturnType(_Types...)>
              */
             template <class _ReturnType, class... _Types>
-            inline stl::function<_ReturnType(_Types...)> make_delegate(_ReturnType(*m)(_Types...)) noexcept
+            inline std::function<_ReturnType(_Types...)> make_delegate(_ReturnType(*m)(_Types...)) noexcept
             {
                 return [=](_Types &&...args)
-                    { return (*m)(stl::forward<_Types>(args)...); };
+                    { return (*m)(std::forward<_Types>(args)...); };
             }
 
             /**
@@ -158,13 +158,13 @@ namespace utl
              * @tparam _Types (set automatically in c++17)
              * @param c pointer to class
              * @param m reference to class method
-             * @return stl::function<ReturnType(_Types...)>
+             * @return std::function<ReturnType(_Types...)>
              */
             template <class _Class, class _ReturnType, class... _Types>
-            inline stl::function<_ReturnType(_Types...)> make_delegate(_Class* c, _ReturnType(_Class::* m)(_Types...)) noexcept
+            inline std::function<_ReturnType(_Types...)> make_delegate(_Class* c, _ReturnType(_Class::* m)(_Types...)) noexcept
             {
                 return [=](_Types &&...args)
-                    { return (c->*m)(stl::forward<_Types>(args)...); };
+                    { return (c->*m)(std::forward<_Types>(args)...); };
             }
 
             /**
@@ -177,13 +177,13 @@ namespace utl
              * @tparam _Types (set automatically in c++17)
              * @param c const pointer to class
              * @param m reference to class method
-             * @return stl::function<ReturnType(_Types...)>
+             * @return std::function<ReturnType(_Types...)>
              */
             template <class _Class, class _ReturnType, class... _Types>
-            inline stl::function<_ReturnType(_Types...)> make_delegate(const _Class* c, _ReturnType(_Class::* m)(_Types...) const) noexcept
+            inline std::function<_ReturnType(_Types...)> make_delegate(const _Class* c, _ReturnType(_Class::* m)(_Types...) const) noexcept
             {
                 return [=](_Types &&...args)
-                    { return (c->*m)(stl::forward<_Types>(args)...); };
+                    { return (c->*m)(std::forward<_Types>(args)...); };
             }
         };
 	}
