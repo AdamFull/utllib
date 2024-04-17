@@ -25,6 +25,7 @@ namespace utl
         template <class _ContT, class _IterVal> 
         struct hm_iterator
         {
+            friend class hash_map;
             using difference_type = std::ptrdiff_t;
             using value_type = _IterVal;
             using pointer = value_type*;
@@ -98,18 +99,9 @@ namespace utl
         {
             if (this != &other)
             {
-                clear();
-
-                size_t pow2{ 1ull };
-                while (pow2 < other.buckets_.size())
-                    pow2 <<= 1ull;
-
-                buckets_.resize(pow2, nullptr);
-
-                for (auto it = other.begin(); it != other.end(); ++it)
-                    insert(*it);
+                hash_map tmp(other);
+                swap(tmp);
             }
-            
             return *this;
         }
 
@@ -118,8 +110,9 @@ namespace utl
             buckets_ = std::move(other.buckets_);
             freed_ = std::move(other.freed_);
             size_ = other.size_;
+            other.size_ = 0;
         }
-
+        
         hash_map& operator=(hash_map&& other)
         {
             if (this != &other)
@@ -127,30 +120,19 @@ namespace utl
                 buckets_ = std::move(other.buckets_);
                 freed_ = std::move(other.freed_);
                 size_ = other.size_;
+                other.size_ = 0;
             }
-
+        
             return *this;
         }
 
         ~hash_map()
         {
             for (auto& b : buckets_)
-            {
-                if (b)
-                {
-                    delete b;
-                    b = nullptr;
-                }
-            }
+                release_ptr(b);
 
             for (auto& f : freed_)
-            {
-                if (f)
-                {
-                    delete f;
-                    f = nullptr;
-                }
-            }
+                release_ptr(f);
         }
 
         allocator_type get_allocator() const noexcept { return buckets_.get_allocator(); }
@@ -185,7 +167,7 @@ namespace utl
         template <class... _Args>
         std::pair<iterator, bool> emplace(_Args &&... args) { return emplace_impl(std::forward<_Args>(args)...); }
 
-        void erase(iterator it) { erase_impl(it); }
+        iterator erase(iterator it) { return erase_impl(it); }
         size_type erase(const key_type& key) { return erase_impl(key); }
 
         void swap(hash_map& other) noexcept 
@@ -229,16 +211,20 @@ namespace utl
 
     private:
         // Lookup free node
-        value_type* make_node()
+        template <class... _Args>
+        value_type* get_node(const key_type& key, _Args &&... args)
         {
             if (!freed_.empty())
             {
                 auto* ptr = freed_.back();
                 freed_.pop_back();
+
+                ptr->second = std::move(mapped_type(std::forward<_Args>(args)...));
+                ptr->first = key;
                 return ptr;
             }
 
-            return new value_type;
+            return new value_type(key, std::move(mapped_type(std::forward<_Args>(args)...)));;
         }
 
         template <class... _Args>
@@ -250,9 +236,7 @@ namespace utl
                 auto& bucket = buckets_[idx];
                 if (!bucket)
                 {
-                    bucket = make_node();
-                    bucket->second = std::move(mapped_type(std::forward<_Args>(args)...));
-                    bucket->first = key;
+                    bucket = get_node(key, std::forward<_Args>(args)...);
                     size_++;
                     return { iterator(this, idx), true };
                 }
@@ -261,29 +245,35 @@ namespace utl
             }
         }
 
-        void erase_impl(iterator it) 
+        iterator erase_impl(iterator it)
         {
-            size_t bucket_idx = it.idx_;
-            for (size_t idx = probe_next(bucket_idx);; idx = probe_next(idx))
+            size_t bucket = it.idx_;
+            for (size_t idx = probe_next(bucket);; idx = probe_next(idx)) 
             {
-                auto& cur_bucket = buckets_[bucket_idx];
-                auto& next_bucket = buckets_[idx];
-                if (next_bucket!)
+                auto& current = buckets_[bucket];
+                auto& next = buckets_[idx];
+
+                if (!next)
                 {
-                    freed_.emplace_back(cur_bucket);
-                    cur_bucket = nullptr;
+                    freed_.emplace_back(current);
+                    current = nullptr;
 
                     size_--;
-                    return;
+
+                    it.advance_past_empty();
+                    return it;
                 }
-                size_t ideal = key_to_idx(next_bucket->first);
-                if (diff(bucket_idx, ideal) < diff(idx, ideal))
+
+                size_t ideal = key_to_idx(next->first);
+                if (diff(bucket, ideal) < diff(idx, ideal)) 
                 {
                     // swap, bucket is closer to ideal than idx
-                    cur_bucket = next_bucket;
-                    bucket_idx = idx;
+                    std::swap(current, next);
+                    bucket = idx;
                 }
             }
+
+            return end();
         }
 
         size_type erase_impl(const key_type& key)
