@@ -76,11 +76,7 @@ namespace utl
         hash_map(size_type bucket_count, const allocator_type& alloc = allocator_type())
             : buckets_(alloc), freed_(alloc)
         {
-            size_t pow2{ 1ull };
-            while (pow2 < bucket_count)
-                pow2 <<= 1ull;
-
-            buckets_.resize(pow2, nullptr);
+            init(bucket_count);
         }
 
         hash_map(const hash_map& other, size_type bucket_count)
@@ -179,7 +175,7 @@ namespace utl
         // Lookup
         mapped_type& at(const key_type& key) { return at_impl(key); }
         const mapped_type& at(const key_type& key) const { return at_impl(key); }
-        mapped_type& operator[](const key_type& key) { return emplace_impl(key).first->second; }
+        mapped_type& operator[](const key_type& key) { return emplace_impl(key, mapped_type()).first->second; }
 
         size_type count(const key_type& key) const { return count_impl(key); }
 
@@ -195,8 +191,16 @@ namespace utl
         void rehash(size_type count) 
         {
             count = std::max(count, size() * 2);
-            hash_map other(*this, count);
-            swap(other);
+
+            hash_map other(std::move(*this));
+
+            clear();
+            init(count);
+
+            for (auto it = other.begin(); it != other.end(); ++it)
+                insert(std::move(*it));
+
+            //swap(other);
         }
 
         void reserve(size_type count) 
@@ -210,33 +214,72 @@ namespace utl
         key_equal key_eq() const { return key_equal(); }
 
     private:
+        void init(size_type bucket_count)
+        {
+            size_t pow2{ 1ull };
+            while (pow2 < bucket_count)
+                pow2 <<= 1ull;
+
+            buckets_.resize(pow2, nullptr);
+        }
+
         // Lookup free node
-        template <class... _Args>
-        value_type* get_node(const key_type& key, _Args &&... args)
+        value_type* get_node(const key_type& key, const mapped_type& val)
         {
             if (!freed_.empty())
             {
                 auto* ptr = freed_.back();
                 freed_.pop_back();
 
-                ptr->second = std::move(mapped_type(std::forward<_Args>(args)...));
+                ptr->second = val;
                 ptr->first = key;
                 return ptr;
             }
 
-            return new value_type(key, std::move(mapped_type(std::forward<_Args>(args)...)));;
+            return new value_type(std::make_pair(key, val));
         }
 
-        template <class... _Args>
-        std::pair<iterator, bool> emplace_impl(const key_type& key, _Args &&... args)
+        value_type* get_node(const key_type& key, mapped_type&& val)
+        {
+            if (!freed_.empty())
+            {
+                auto* ptr = freed_.back();
+                freed_.pop_back();
+
+                ptr->second = std::move(val);
+                ptr->first = key;
+                return ptr;
+            }
+
+            return new value_type(std::make_pair(key, std::move(val)));
+        }
+
+        std::pair<iterator, bool> emplace_impl(const key_type& key, const mapped_type& val)
         {
             reserve(size_ + 1ull);
-            for (size_t idx = key_to_idx(key);; idx = probe_next(idx)) 
+            for (size_t idx = key_to_idx(key);; idx = probe_next(idx))
             {
                 auto& bucket = buckets_[idx];
                 if (!bucket)
                 {
-                    bucket = get_node(key, std::forward<_Args>(args)...);
+                    bucket = get_node(key, val);
+                    size_++;
+                    return { iterator(this, idx), true };
+                }
+                else if (key_equal()(bucket->first, key))
+                    return { iterator(this, idx), false };
+            }
+        }
+
+        std::pair<iterator, bool> emplace_impl(const key_type& key, mapped_type&& val)
+        {
+            reserve(size_ + 1ull);
+            for (size_t idx = key_to_idx(key);; idx = probe_next(idx))
+            {
+                auto& bucket = buckets_[idx];
+                if (!bucket)
+                {
+                    bucket = get_node(key, std::move(val));
                     size_++;
                     return { iterator(this, idx), true };
                 }
