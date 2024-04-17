@@ -113,6 +113,25 @@ namespace utl
             return *this;
         }
 
+        hash_map(hash_map&& other)
+        {
+            buckets_ = std::move(other.buckets_);
+            freed_ = std::move(other.freed_);
+            size_ = other.size_;
+        }
+
+        hash_map& operator=(hash_map&& other)
+        {
+            if (this != &other)
+            {
+                buckets_ = std::move(other.buckets_);
+                freed_ = std::move(other.freed_);
+                size_ = other.size_;
+            }
+
+            return *this;
+        }
+
         ~hash_map()
         {
             for (auto& b : buckets_)
