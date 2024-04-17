@@ -75,19 +75,43 @@ namespace utl
 		return cast<_ReturnType>(enum_value);
 	}
 
-	constexpr inline const u32 packUint16x2(u16 lhs, u16 rhs)
+	constexpr inline const u32 pack_u32_16x2(u16 lhs, u16 rhs)
 	{
 		return (rhs << 16) | (lhs & 0xFFFF);
 	}
 
-	inline const void unpackUint16x2(u32 packed, u16& lhs, u16& rhs)
+	inline const void unpack_u32_16x2(u32 packed, u16& lhs, u16& rhs)
 	{
 		rhs = cast<u16>(packed >> 16);
 		lhs = cast<u16>(packed & 0xFFFF);
 	}
 
+	constexpr inline const u32 pack_u32_8x4(u8 l0, u8 l1, u8 r0, u8 r1)
+	{
+		return (l0 << 24) + (l1 << 16) + (r0 << 8) + r1;
+	}
+
+	inline const void unpack_u32_8x4(u32 packed, u8& l0, u8& l1, u8& r0, u8& r1)
+	{
+		l0 = (packed & 0xff000000) >> 24;
+		l1 = (packed & 0x00ff0000) >> 16;
+		r0 = (packed & 0x0000ff00) >> 8;
+		r1 = (packed & 0x000000ff);
+	}
+
 	template<class _Ty>
-	inline void safe_delete(_Ty*& ptr)
+	inline void release_ptr(const std::allocator<_Ty>& alloc, _Ty*& ptr, size_t count = 1ull)
+	{
+		if(ptr)
+		{
+			alloc.destroy(ptr);
+        	alloc.deallocate(ptr, count);
+        	ptr = nullptr;
+		}
+	}
+
+	template<class _Ty>
+	inline void release_ptr(_Ty*& ptr)
 	{
 		if(ptr)
 		{
@@ -97,34 +121,12 @@ namespace utl
 	}
 
 	template<class _Ty>
-	inline void safe_delete(const std::allocator<_Ty>& alloc, _Ty*& ptr)
-	{
-		if(ptr)
-		{
-			alloc.destroy(ptr);
-        	alloc.deallocate(ptr, 1);
-        	ptr = nullptr;
-		}
-	}
-
-	template<class _Ty>
-	inline void safe_delete_array(_Ty*& ptr)
+	inline void release_arr(_Ty*& ptr)
 	{
 		if(ptr)
 		{
 			delete[] ptr;
 			ptr = nullptr;
-		}
-	}
-
-	template<class _Ty>
-	inline void safe_delete_array(const std::allocator<_Ty>& alloc, _Ty*& ptr, size_t count)
-	{
-		if(ptr)
-		{
-			alloc.destroy(ptr);
-        	alloc.deallocate(ptr, count);
-        	ptr = nullptr;
 		}
 	}
 }
