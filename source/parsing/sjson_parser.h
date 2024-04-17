@@ -5,6 +5,7 @@
 #include <vector>
 #include <unordered_map>
 #include <stdexcept>
+#include <container/hash_map.h>
 
 namespace sjson
 {
@@ -413,6 +414,17 @@ namespace sjson
 
 	template<class _Ty>
 	inline void deserialize(const sjson_object& sjson, std::unordered_map<std::string, _Ty>& value)
+	{
+		for (auto& [name, object] : sjson._objects)
+		{
+			_Ty data;
+			deserialize(object, data);
+			value.emplace(name, data);
+		}
+	}
+
+	template<class _Ty>
+	inline void deserialize(const sjson_object& sjson, utl::hash_map<std::string, _Ty>& value)
 	{
 		for (auto& [name, object] : sjson._objects)
 		{
