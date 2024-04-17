@@ -85,4 +85,46 @@ namespace utl
 		rhs = cast<u16>(packed >> 16);
 		lhs = cast<u16>(packed & 0xFFFF);
 	}
+
+	template<class _Ty>
+	inline void safe_delete(_Ty*& ptr)
+	{
+		if(ptr)
+		{
+			delete ptr;
+			ptr = nullptr;
+		}
+	}
+
+	template<class _Ty>
+	inline void safe_delete(const std::allocator<_Ty>& alloc, _Ty*& ptr)
+	{
+		if(ptr)
+		{
+			alloc.destroy(ptr);
+        	alloc.deallocate(ptr, 1);
+        	ptr = nullptr;
+		}
+	}
+
+	template<class _Ty>
+	inline void safe_delete_array(_Ty*& ptr)
+	{
+		if(ptr)
+		{
+			delete[] ptr;
+			ptr = nullptr;
+		}
+	}
+
+	template<class _Ty>
+	inline void safe_delete_array(const std::allocator<_Ty>& alloc, _Ty*& ptr, size_t count)
+	{
+		if(ptr)
+		{
+			alloc.destroy(ptr);
+        	alloc.deallocate(ptr, count);
+        	ptr = nullptr;
+		}
+	}
 }
