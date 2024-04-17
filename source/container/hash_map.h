@@ -54,7 +54,7 @@ namespace utl
 
             void advance_past_empty()
             {
-                while (idx_ < hm_->buckets_.size() && key_equal()(hm_->buckets_[idx_], nullptr))
+                while (idx_ < hm_->buckets_.size() && !hm_->buckets_[idx_])
                     ++idx_;
             }
 
@@ -96,20 +96,20 @@ namespace utl
 
         hash_map& operator=(const hash_map& other)
         {
-            //if (this != &other)
-            //{
-            //    clear();
-            //    buckets_.resize(other.buckets_.size(), nullptr);
-            //    for (auto it = other.begin(); it != other.end(); ++it)
-            //        insert(*it);
-            //}
-            //return *this;
-
             if (this != &other)
             {
-                hash_map tmp(other);
-                swap(tmp);
+                clear();
+
+                size_t pow2{ 1ull };
+                while (pow2 < other.buckets_.size())
+                    pow2 <<= 1ull;
+
+                buckets_.resize(pow2, nullptr);
+
+                for (auto it = other.begin(); it != other.end(); ++it)
+                    insert(*it);
             }
+            
             return *this;
         }
 
@@ -225,12 +225,11 @@ namespace utl
         template <class... _Args>
         std::pair<iterator, bool> emplace_impl(const key_type& key, _Args &&... args)
         {
-            //assert(!key_equal()(empty_key_, key) && "empty key shouldn't be used");
             reserve(size_ + 1ull);
             for (size_t idx = key_to_idx(key);; idx = probe_next(idx)) 
             {
                 auto& bucket = buckets_[idx];
-                if (key_equal()(bucket, nullptr))
+                if (!bucket)
                 {
                     bucket = make_node();
                     bucket->second = std::move(mapped_type(std::forward<_Args>(args)...));
@@ -250,7 +249,7 @@ namespace utl
             {
                 auto& cur_bucket = buckets_[bucket_idx];
                 auto& next_bucket = buckets_[idx];
-                if (key_equal()(next_bucket, nullptr))
+                if (next_bucket!)
                 {
                     freed_.emplace_back(cur_bucket);
                     cur_bucket = nullptr;
@@ -296,10 +295,9 @@ namespace utl
 
         iterator find_impl(const key_type& key)
         {
-            //assert(!key_equal()(empty_key_, key) && "empty key shouldn't be used");
             for (size_t idx = key_to_idx(key);; idx = probe_next(idx)) 
             {
-                if (key_equal()(buckets_[idx], nullptr))
+                if (!buckets_[idx])
                     return end();
 
                 if (key_equal()(buckets_[idx]->first, key))
