@@ -75,6 +75,19 @@ namespace utl
 		return cast<_ReturnType>(enum_value);
 	}
 
+	// U16 packing
+	constexpr inline const u16 pack_u16_8x2(u8 lhs, u8 rhs)
+	{
+		return (rhs << 8) | (lhs & 0xFF);
+	}
+
+	inline const void unpack_u32_16x2(u16 packed, u8& lhs, u8& rhs)
+	{
+		rhs = cast<u8>(packed >> 8);
+		lhs = cast<u8>(packed & 0xFF);
+	}
+
+	// U32 packing
 	constexpr inline const u32 pack_u32_16x2(u16 lhs, u16 rhs)
 	{
 		return (rhs << 16) | (lhs & 0xFFFF);
@@ -97,6 +110,48 @@ namespace utl
 		l1 = (packed & 0x00ff0000) >> 16;
 		r0 = (packed & 0x0000ff00) >> 8;
 		r1 = (packed & 0x000000ff);
+	}
+
+	// U64 packing
+	constexpr inline const u64 pack_u64_8x8(u8 l0, u8 l1, u8 l2, u8 l3, u8 r0, u8 r1, u8 r2, u8 r3)
+	{
+		return (l1 << 56ull) + (l1 << 48ull) + (l2 << 40ull) + (l3 << 32ull) + (r0 << 24ull) + (r1 << 16ull) + (r2 << 8ull) + r3;
+	}
+
+	inline const void unpack_u64_8x8(u64 packed, u8& l0, u8& l1, u8& l2, u8& l3, u8& r0, u8& r1, u8& r2, u8& r3)
+	{
+		l0 = (packed & 0xff00000000000000ull) >> 56ull;
+		l1 = (packed & 0x00ff000000000000ull) >> 48ull;
+		l2 = (packed & 0x0000ff0000000000ull) >> 40ull;
+		l3 = (packed & 0x000000ff00000000ull) >> 32ull;
+		r0 = (packed & 0x00000000ff000000ull) >> 24ull;
+		r1 = (packed & 0x0000000000ff0000ull) >> 16ull;
+		r2 = (packed & 0x000000000000ff00ull) >> 8ull;
+		r3 = (packed & 0x00000000000000ffull);
+	}
+
+	constexpr inline const u64 pack_u64_16x4(u16 l0, u16 l1, u16 r0, u16 r1)
+	{
+		return (l0 << 48ull) + (l1 << 32ull) + (r0 << 16ull) + r1;
+	}
+
+	inline const void unpack_u64_16x4(u64 packed, u16& l0, u16& l1, u16& r0, u16& r1)
+	{
+		l0 = (packed & 0xffff000000000000ull) >> 48ull;
+		l1 = (packed & 0x0000ffff00000000ull) >> 32ull;
+		r0 = (packed & 0x00000000ffff0000ull) >> 16ull;
+		r1 = (packed & 0x000000000000ffffull);
+	}
+
+	constexpr inline const u64 pack_u64_32x2(u32 lhs, u32 rhs)
+	{
+		return (lhs << 32ull) + rhs;
+	}
+
+	inline const void unpack_u64_32x2(u64 packed, u32& lhs, u32& rhs)
+	{
+		lhs = (packed & 0xffffffff00000000ull) >> 32ull;
+		rhs = (packed & 0x00000000ffffffffull);
 	}
 
 	template<class _Ty>
