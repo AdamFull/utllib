@@ -95,8 +95,11 @@ namespace utl
         {
             if (this != &other)
             {
-                hash_map tmp(other);
-                swap(tmp);
+                clear();
+                init(other.buckets_.size());
+
+                for (auto it = other.begin(); it != other.end(); ++it)
+                    insert(*it);
             }
             return *this;
         }
@@ -150,9 +153,18 @@ namespace utl
         // Modifiers
         void clear() noexcept 
         {
-            freed_.insert(freed_.end(), buckets_.begin(), buckets_.end());
-            for (auto& b : buckets_) 
-                    b = nullptr;
+            for (auto& bucket : buckets_)
+            {
+                if (bucket)
+                {
+                    // Call destructor for object
+                    bucket->second.~_Ty();
+
+                    // Save for reusage
+                    freed_.emplace_back(bucket);
+                    bucket = nullptr;
+                }
+            }
 
             size_ = 0;
         }

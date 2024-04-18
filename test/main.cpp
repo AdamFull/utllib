@@ -2,6 +2,24 @@
 #include <standart_library.h>
 #include <container/hash_map.h>
 
+static int counter = 0;
+
+class CMyClass
+{
+public:
+    CMyClass()
+    {
+        std::cout << " Constructed " << number << std::endl;
+    }
+
+    ~CMyClass()
+    {
+        std::cout << " Destructed " << number << std::endl;
+    }
+
+private:
+    int number{ counter++ };
+};
 
 int main()
 {
@@ -22,6 +40,9 @@ int main()
     my_map.emplace("Fourty", 14);
     my_map.emplace("Fifty", 15);
     my_map.emplace("Sixty", 16);
+
+    utl::hash_map<std::string, int> my_another_map;
+    my_another_map = my_map;
 
     for (auto it = my_map.begin(); it != my_map.end(); ) 
     {
@@ -55,6 +76,16 @@ int main()
     unique_map.emplace(8, std::make_unique<u32>(8));
     unique_map.emplace(9, std::make_unique<u32>(9));
 
+    utl::hash_map<u64, std::unique_ptr<CMyClass>> object_map;
+    object_map.emplace(0, std::make_unique<CMyClass>());
+    object_map.emplace(1, std::make_unique<CMyClass>());
+    object_map.emplace(2, std::make_unique<CMyClass>());
+    object_map.emplace(3, std::make_unique<CMyClass>());
+    object_map.emplace(4, std::make_unique<CMyClass>());
+    object_map.emplace(5, std::make_unique<CMyClass>());
+    object_map.emplace(6, std::make_unique<CMyClass>());
+
+    object_map.clear();
 
     return 0;
 }
