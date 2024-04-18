@@ -192,5 +192,9 @@ BENCHMARK_MAIN();
 //    
 //    object_map.clear();
 //
-//    return 0;
+//    //utl::hash_map<u64, u64> object_map;
+//    //for (u64 idx = 0ull; idx < 1000000000ull; ++idx)
+//    //    object_map.emplace(idx, idx);
+//    //
+//    //return 0;
 //}

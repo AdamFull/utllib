@@ -1,6 +1,7 @@
 #pragma once
 
 #include <standart_library.h>
+#include "vector.h"
 
 namespace utl
 {
@@ -20,7 +21,7 @@ namespace utl
 		using allocator_type = _Allocator;
 		using reference = value_type&;
 		using const_reference = const value_type&;
-		using buckets = std::vector<value_type*, allocator_type>;
+		using buckets = vector<value_type*>;
 
         template <class _ContT, class _IterVal> 
         struct hm_iterator
@@ -74,13 +75,12 @@ namespace utl
         }
         
         hash_map(size_type bucket_count, const allocator_type& alloc = allocator_type())
-            : buckets_(alloc), freed_(alloc)
         {
             init(bucket_count);
         }
 
         hash_map(const hash_map& other, size_type bucket_count)
-            : hash_map(bucket_count, other.get_allocator()) 
+            : hash_map(bucket_count)
         {
             for (auto it = other.begin(); it != other.end(); ++it)
                 insert(*it);
@@ -139,7 +139,7 @@ namespace utl
             }
         }
 
-        allocator_type get_allocator() const noexcept { return buckets_.get_allocator(); }
+        //allocator_type get_allocator() const noexcept { return buckets_.get_allocator(); }
 
         // Iterators
         iterator begin() noexcept { return iterator(this); }
@@ -168,7 +168,7 @@ namespace utl
                     if constexpr (!std::is_trivial_v<mapped_type>)
                         bucket->second.~mapped_type();
 
-                    freed_.emplace_back(bucket);
+                    freed_.push_back(bucket);
                     bucket = nullptr;
                 }
             }
@@ -232,7 +232,7 @@ namespace utl
                         if constexpr (!std::is_trivial_v<mapped_type>)
                             bucket->second.~mapped_type();
 
-                        freed_.emplace_back(bucket);
+                        freed_.push_back(bucket);
                         bucket = nullptr;
                     }
                 }
@@ -256,7 +256,10 @@ namespace utl
             while (pow2 < bucket_count)
                 pow2 <<= 1ull;
 
-            buckets_.resize(pow2, nullptr);
+            buckets_.resize(pow2);
+
+            for (auto& bucket : buckets_)
+                bucket = nullptr;
         }
 
         template<class... _Args>
@@ -305,7 +308,7 @@ namespace utl
 
                 if (!next)
                 {
-                    freed_.emplace_back(current);
+                    freed_.push_back(current);
                     current = nullptr;
 
                     size_--;

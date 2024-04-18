@@ -269,16 +269,21 @@ namespace utl
         }
 
         template <class... _Args>
-        void emplace_back(_Args &&...args)
+        _Ty& emplace_back(_Args &&...args)
         {
-            static_assert(!std::is_trivial_v<_Ty>, "Use push_back() instead of emplace_back() with trivial types");
+            if constexpr (std::is_trivial_v<_Ty>)
+                push_back(std::forward<_Args>(args)...);
+            else
+            {
+                if (m_size == m_capacity)
+                    reserve(m_capacity * vector::grow_factor + 1);
 
-            if (m_size == m_capacity)
-                reserve(m_capacity * vector::grow_factor + 1);
-    
-            new (m_data + m_size) _Ty(std::forward<_Args>(args)...);
-    
-            m_size++;
+                new (m_data + m_size) _Ty(std::forward<_Args>(args)...);
+
+                m_size++;
+            }
+
+            return m_data[m_size - 1];
         }
 
         void pop_back()
