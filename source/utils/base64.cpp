@@ -53,14 +53,14 @@ std::string base64::encode(uint8_t const *buf, unsigned int bufLen)
     return ret;
 }
 
-std::vector<uint8_t> base64::decode(std::string const &encoded_string)
+utl::vector<uint8_t> base64::decode(std::string const &encoded_string)
 {
     int in_len = encoded_string.size();
     int i = 0;
     int j = 0;
     int in_ = 0;
     uint8_t char_array_4[4], char_array_3[3];
-    std::vector<uint8_t> ret;
+    utl::vector<uint8_t> ret;
 
     while (in_len-- && (encoded_string[in_] != '=') && is_base64(encoded_string[in_]))
     {

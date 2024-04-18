@@ -15,7 +15,7 @@ namespace utl
 		public:
 			~uplugin();
 
-			bool load(const std::vector<u8>& data);
+			bool load(const utl::vector<u8>& data);
 			bool unload();
 
 			template<class _Signature>
@@ -39,7 +39,7 @@ namespace utl
 			LPVOID m_pModule{ nullptr };
 #endif
 			std::unordered_map<u64, u64> m_tableMap{};
-			std::vector<intptr_t> m_vFunctionTable{};
+			utl::vector<intptr_t> m_vFunctionTable{};
 		};
 	}
 }

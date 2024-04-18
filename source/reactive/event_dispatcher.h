@@ -49,7 +49,7 @@ namespace utl
 					listeners_vec.end());
 			}
 		private:
-			std::unordered_map<event_id, std::vector<default_delegate_t>> listeners;
+			std::unordered_map<event_id, utl::vector<default_delegate_t>> listeners;
 		};
 	}
 }

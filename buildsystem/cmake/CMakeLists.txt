@@ -11,7 +11,7 @@ find_package(mimalloc REQUIRED NO_SYSTEM_ENVIRONMENT_PATH)
 add_library(${PROJECT_NAME} ${UTILITY_MEMORY_SOURCES})
 
 target_link_libraries(${PROJECT_NAME} 
-	PUBLIC mimalloc
+	PUBLIC mimalloc-static
 	PUBLIC Backward::Backward
 )
 

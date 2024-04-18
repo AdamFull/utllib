@@ -7,7 +7,7 @@
 
 #include <cassert>
 
-//#include <mimalloc.h>
+#include <mimalloc.h>
 
 using i8 = int8_t;
 using u8 = uint8_t;
@@ -63,6 +63,15 @@ using f64 = double;
 
 namespace utl
 {
+	template<class _Kty, class _Ty,
+		class _Hasher = std::hash<_Kty>,
+		class _Keyeq = std::equal_to<_Kty>,
+		class _Alloc = mi_stl_allocator<std::pair<const _Kty, _Ty>>>
+	using hash_map = std::unordered_map<_Kty, _Ty, _Hasher, _Keyeq, _Alloc>;
+
+	template<class _Ty, class _Alloc = mi_stl_allocator<_Ty>>
+	using vector = std::vector<_Ty, _Alloc>;
+
 	template<class _Ty, class _KTy>
 	inline constexpr _Ty cast(_KTy object)
 	{

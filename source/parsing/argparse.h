@@ -44,7 +44,7 @@ namespace utl
 			argument& register_arg(_Args... argkeys)
 			{
 				u64 argument_index = arguments.size();
-				std::vector<std::string> keys{ argkeys... };
+				utl::vector<std::string> keys{ argkeys... };
 
 				auto& arg = arguments.emplace_back();
 				
@@ -125,7 +125,7 @@ namespace utl
 				{
 					auto& arg = arguments[idx];
 
-					std::vector<std::string> keys;
+					utl::vector<std::string> keys;
 					for (const auto& [key, index] : argument_mappings) 
 					{
 						if (index == idx)
@@ -151,7 +151,7 @@ namespace utl
 			}
 		private:
 			std::unordered_map<std::string, u64> argument_mappings;
-			std::vector<argument> arguments;
+			utl::vector<argument> arguments;
 			std::unordered_map<std::string, std::string> parsed;
 		};
 	}

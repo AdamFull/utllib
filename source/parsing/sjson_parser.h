@@ -1,11 +1,7 @@
 #pragma once
 
-#include <string>
-#include <sstream>
-#include <vector>
-#include <unordered_map>
+#include <standart_library.h>
 #include <stdexcept>
-#include <container/hash_map.h>
 
 namespace sjson
 {
@@ -25,7 +21,7 @@ namespace sjson
 		double _double{ 0.0 };
 		bool _boolean{ false };
 		std::string _string;
-		std::vector<sjson_object> _array;
+		utl::vector<sjson_object> _array;
 		std::unordered_map<std::string, sjson_object> _objects;
 		esjson_object_type _type{ esjson_object_type::e_object };
 
@@ -86,9 +82,9 @@ namespace sjson
 		public:
 			sjson_tokenizer(const std::string& input) : content(input) {}
 
-			std::vector<sjson_token> tokenize()
+			utl::vector<sjson_token> tokenize()
 			{
-				std::vector<sjson_token> tokens;
+				utl::vector<sjson_token> tokens;
 
 				while (pos < content.size())
 				{
@@ -253,7 +249,7 @@ namespace sjson
 				tokens = tokenizer.tokenize();
 			}
 
-			sjson_parser(const std::vector<char>& input)
+			sjson_parser(const utl::vector<char>& input)
 			{
 				sjson_tokenizer tokenizer(std::string{input.begin(), input.end()});
 				tokens = tokenizer.tokenize();
@@ -364,7 +360,7 @@ namespace sjson
 				return current;
 			}
 		private:
-			std::vector<sjson_token> tokens;
+			utl::vector<sjson_token> tokens;
 			size_t pos{ 0ull };
 		};
 	}
@@ -374,7 +370,7 @@ namespace sjson
 		return parsing::sjson_parser(data).parse();
 	}
 
-	inline sjson_object parse(const std::vector<char>& data)
+	inline sjson_object parse(const utl::vector<char>& data)
 	{
 		return parsing::sjson_parser(data).parse();
 	}
@@ -404,6 +400,17 @@ namespace sjson
 	template<class _Ty>
 	inline void deserialize(const sjson_object& sjson, std::vector<_Ty>& value)
 	{ 
+		for (auto& object : sjson._array)
+		{
+			_Ty data;
+			deserialize(object, data);
+			value.emplace_back(data);
+		}
+	}
+
+	template<class _Ty>
+	inline void deserialize(const sjson_object& sjson, utl::vector<_Ty>& value)
+	{
 		for (auto& object : sjson._array)
 		{
 			_Ty data;

@@ -92,10 +92,10 @@ namespace utl
 						};
 					}
 
-					std::vector<command_token> parse(const std::string& command_str)
+					utl::vector<command_token> parse(const std::string& command_str)
 					{
 						static std::string other_char("=:(.),");
-						std::vector<command_token> tokens{};
+						utl::vector<command_token> tokens{};
 
 						sc.init(command_str);
 
@@ -224,7 +224,7 @@ namespace utl
 					}
 				private:
 					command_parser parser{};
-					std::vector<command_token> tokens{};
+					utl::vector<command_token> tokens{};
 					size_t pos{};
 				};
 			}

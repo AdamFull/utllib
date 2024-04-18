@@ -2,8 +2,7 @@
 #include <standart_library.h>
 #include <container/hash_map.h>
 
-#include "hash_table6.h"
-#include "hash_table8.h"
+static int allocator_version = mi_version();
 
 #include <benchmark/benchmark.h>
 
@@ -39,32 +38,6 @@ std::string gen_random(const int len)
         tmp_s += alphanum[rand() % (sizeof(alphanum) - 1)];
 
     return tmp_s;
-}
-
-static void BM_emhash8_hash_map_simple(benchmark::State& state)
-{
-    emhash6::HashMap<u64, u64> mmap;
-    for (auto _ : state)
-    {
-        for (size_t idx = 0ull; idx < state.range(); ++idx)
-            mmap.emplace(idx, idx);
-
-        benchmark::DoNotOptimize(mmap);
-        benchmark::ClobberMemory();
-    }
-}
-
-static void BM_emhash8_hash_map_big(benchmark::State& state)
-{
-    emhash6::HashMap<std::string, std::string> mmap;
-    for (auto _ : state)
-    {
-        for (size_t idx = 0ull; idx < state.range(); ++idx)
-            mmap.emplace(gen_random(64), gen_random(64));
-
-        benchmark::DoNotOptimize(mmap);
-        benchmark::ClobberMemory();
-    }
 }
 
 static void BM_unordered_map_simple(benchmark::State& state)

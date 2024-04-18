@@ -21,7 +21,7 @@ const std::unique_ptr<uplugin>& uplugin_manager::load(const char* name, const st
 	if (!m_pFSWrapper)
 		m_pFSWrapper = std::make_unique<filesystem::basic_filesystem_wrapper>();
 
-	std::vector<u8> data{};
+	utl::vector<u8> data{};
 	if (m_pFSWrapper->fread(path, data))
 	{
 		auto new_plugin = std::make_unique<uplugin>();
