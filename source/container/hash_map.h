@@ -192,15 +192,24 @@ namespace utl
         {
             count = std::max(count, size() * 2);
 
-            hash_map other(std::move(*this));
+            buckets tmp = std::move(buckets_);
+            size_ = 0ull;
 
-            clear();
             init(count);
 
-            for (auto it = other.begin(); it != other.end(); ++it)
-                insert(std::move(*it));
-
-            //swap(other);
+            for (auto& bucket : tmp)
+            {
+                if (bucket)
+                {
+                    if constexpr (!std::is_copy_constructible_v<_Ty> && std::is_move_constructible_v<_Ty>)
+                        insert(std::move(*bucket));
+                    else
+                    {
+                        insert(*bucket);
+                        release_ptr(bucket);
+                    }
+                }
+            }
         }
 
         void reserve(size_type count) 
@@ -223,38 +232,24 @@ namespace utl
             buckets_.resize(pow2, nullptr);
         }
 
-        // Lookup free node
-        value_type* get_node(const key_type& key, const mapped_type& val)
+        template<class... _Args>
+        value_type* get_node(const key_type& key, _Args&&... args)
         {
             if (!freed_.empty())
             {
                 auto* ptr = freed_.back();
                 freed_.pop_back();
-
-                ptr->second = val;
+        
+                ptr->second = mapped_type(std::forward<_Args>(args)...);
                 ptr->first = key;
                 return ptr;
             }
-
-            return new value_type(std::make_pair(key, val));
+        
+            return new value_type(std::make_pair(key, mapped_type(std::forward<_Args>(args)...)));
         }
 
-        value_type* get_node(const key_type& key, mapped_type&& val)
-        {
-            if (!freed_.empty())
-            {
-                auto* ptr = freed_.back();
-                freed_.pop_back();
-
-                ptr->second = std::move(val);
-                ptr->first = key;
-                return ptr;
-            }
-
-            return new value_type(std::make_pair(key, std::move(val)));
-        }
-
-        std::pair<iterator, bool> emplace_impl(const key_type& key, const mapped_type& val)
+        template<class... _Args>
+        std::pair<iterator, bool> emplace_impl(const key_type& key, _Args&&... args)
         {
             reserve(size_ + 1ull);
             for (size_t idx = key_to_idx(key);; idx = probe_next(idx))
@@ -262,24 +257,7 @@ namespace utl
                 auto& bucket = buckets_[idx];
                 if (!bucket)
                 {
-                    bucket = get_node(key, val);
-                    size_++;
-                    return { iterator(this, idx), true };
-                }
-                else if (key_equal()(bucket->first, key))
-                    return { iterator(this, idx), false };
-            }
-        }
-
-        std::pair<iterator, bool> emplace_impl(const key_type& key, mapped_type&& val)
-        {
-            reserve(size_ + 1ull);
-            for (size_t idx = key_to_idx(key);; idx = probe_next(idx))
-            {
-                auto& bucket = buckets_[idx];
-                if (!bucket)
-                {
-                    bucket = get_node(key, std::move(val));
+                    bucket = get_node(key, std::forward<_Args>(args)...);
                     size_++;
                     return { iterator(this, idx), true };
                 }

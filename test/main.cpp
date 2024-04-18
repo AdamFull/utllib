@@ -43,5 +43,18 @@ int main()
         std::cout << name << ": " << value << std::endl;
     }
 
+    utl::hash_map<u64, std::unique_ptr<u32>> unique_map{};
+    unique_map.emplace(0, std::make_unique<u32>(0));
+    unique_map.emplace(1, std::make_unique<u32>(1));
+    unique_map.emplace(2, std::make_unique<u32>(2));
+    unique_map.emplace(3, std::make_unique<u32>(3));
+    unique_map.emplace(4, std::make_unique<u32>(4));
+    unique_map.emplace(5, std::make_unique<u32>(5));
+    unique_map.emplace(6, std::make_unique<u32>(6));
+    unique_map.emplace(7, std::make_unique<u32>(7));
+    unique_map.emplace(8, std::make_unique<u32>(8));
+    unique_map.emplace(9, std::make_unique<u32>(9));
+
+
     return 0;
 }
