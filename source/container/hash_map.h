@@ -117,7 +117,7 @@ namespace utl
             if (this != &other)
             {
                 buckets_ = std::move(other.buckets_);
-                freed_ = std::move(other.freed_);
+                freed_ = std::move(freed_);
                 size_ = other.size_;
                 other.size_ = 0;
             }
@@ -127,11 +127,16 @@ namespace utl
 
         ~hash_map()
         {
-            for (auto& b : buckets_)
-                release_ptr(b);
+            clear();
 
-            for (auto& f : freed_)
-                release_ptr(f);
+            for (auto& node : freed_)
+            {
+                if (node)
+                {
+                    std::free(node);
+                    node = nullptr;
+                }
+            }
         }
 
         allocator_type get_allocator() const noexcept { return buckets_.get_allocator(); }
@@ -157,12 +162,13 @@ namespace utl
             {
                 if (bucket)
                 {
-                    // Call destructor for object
-                    bucket->second.~_Ty();
+                    if constexpr (!std::is_trivial_v<_KTy>)
+                        bucket->first.~KTy();
 
-                    // Save for reusage
-                    freed_.emplace_back(bucket);
-                    bucket = nullptr;
+                    if constexpr (!std::is_trivial_v<_Ty>)
+                        bucket->second.~Ty();
+
+                    freed_.emplace_back(std::move(bucket));
                 }
             }
 
@@ -247,17 +253,19 @@ namespace utl
         template<class... _Args>
         value_type* get_node(const key_type& key, _Args&&... args)
         {
+            value_type* bucket{ nullptr };
             if (!freed_.empty())
             {
-                auto* ptr = freed_.back();
+                bucket = freed_.back();
                 freed_.pop_back();
-        
-                ptr->second = mapped_type(std::forward<_Args>(args)...);
-                ptr->first = key;
-                return ptr;
             }
-        
-            return new value_type(std::make_pair(key, mapped_type(std::forward<_Args>(args)...)));
+            else
+                bucket = static_cast<value_type*>(std::calloc(1ull, sizeof(value_type)));
+
+            bucket->first = key;
+            bucket->second = mapped_type(std::forward<_Args>(args)...);
+
+            return bucket;
         }
 
         template<class... _Args>
@@ -288,9 +296,7 @@ namespace utl
 
                 if (!next)
                 {
-                    freed_.emplace_back(current);
-                    current = nullptr;
-
+                    freed_.emplace_back(std::move(current));
                     size_--;
 
                     it.advance_past_empty();

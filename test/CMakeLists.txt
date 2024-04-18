@@ -4,6 +4,8 @@ project(utility_test)
 file(GLOB_RECURSE UTILITY_TEST_SOURCES *.c *.cpp *.cc)
 file(GLOB_RECURSE UTILITY_TEST_HEADERS *.h *.hpp *.hh)
 
+find_package(benchmark CONFIG REQUIRED)
+
 add_executable(${PROJECT_NAME} ${UTILITY_TEST_SOURCES} ${UTILITY_TEST_HEADERS})
 
 include_directories(
@@ -19,4 +21,5 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE utility_lib
+    PRIVATE benchmark::benchmark
 )
