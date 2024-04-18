@@ -162,13 +162,14 @@ namespace utl
             {
                 if (bucket)
                 {
-                    if constexpr (!std::is_trivial_v<_KTy>)
-                        bucket->first.~KTy();
+                    if constexpr (!std::is_trivial_v<key_type>)
+                        bucket->first.~key_type();
 
-                    if constexpr (!std::is_trivial_v<_Ty>)
-                        bucket->second.~Ty();
+                    if constexpr (!std::is_trivial_v<mapped_type>)
+                        bucket->second.~mapped_type();
 
-                    freed_.emplace_back(std::move(bucket));
+                    freed_.emplace_back(bucket);
+                    bucket = nullptr;
                 }
             }
 
@@ -224,7 +225,15 @@ namespace utl
                     else
                     {
                         insert(*bucket);
-                        release_ptr(bucket);
+
+                        if constexpr (!std::is_trivial_v<key_type>)
+                            bucket->first.~key_type();
+
+                        if constexpr (!std::is_trivial_v<mapped_type>)
+                            bucket->second.~mapped_type();
+
+                        freed_.emplace_back(bucket);
+                        bucket = nullptr;
                     }
                 }
             }
@@ -262,7 +271,7 @@ namespace utl
             else
                 bucket = static_cast<value_type*>(std::calloc(1ull, sizeof(value_type)));
 
-            bucket->first = key;
+            bucket->first = key_type(key);
             bucket->second = mapped_type(std::forward<_Args>(args)...);
 
             return bucket;
@@ -296,7 +305,9 @@ namespace utl
 
                 if (!next)
                 {
-                    freed_.emplace_back(std::move(current));
+                    freed_.emplace_back(current);
+                    current = nullptr;
+
                     size_--;
 
                     it.advance_past_empty();
