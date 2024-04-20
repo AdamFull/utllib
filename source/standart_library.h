@@ -72,6 +72,137 @@ namespace utl
 	template<class _Ty, class _Alloc = mi_stl_allocator<_Ty>>
 	using vector = std::vector<_Ty, _Alloc>;
 
+	template<class _Elem>
+	using basic_string = std::basic_string<_Elem, std::char_traits<_Elem>, mi_stl_allocator<_Elem>>;
+	
+	using string = basic_string<char>;
+	using wstring = basic_string<wchar_t>;
+	using u16string = basic_string<char16_t>;
+	using u32string = basic_string<char32_t>;
+
+	using stringstream = std::basic_stringstream<char, std::char_traits<char>, mi_stl_allocator<char>>;
+	using wstringstream = std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, mi_stl_allocator<wchar_t>>;
+
+	using istringstream = std::basic_istringstream<char, std::char_traits<char>, mi_stl_allocator<char>>;
+	using wistringstream = std::basic_istringstream<wchar_t, std::char_traits<wchar_t>, mi_stl_allocator<wchar_t>>;
+	using ostringstream = std::basic_ostringstream<char, std::char_traits<char>, mi_stl_allocator<char>>;
+	using wostringstream = std::basic_ostringstream<wchar_t, std::char_traits<wchar_t>, mi_stl_allocator<wchar_t>>;
+
+	template<class _Codecvt, class _Elem = wchar_t>
+	using wstring_convert = std::wstring_convert<_Codecvt, _Elem, mi_stl_allocator<_Elem>, mi_stl_allocator<char>>;
+
+	inline string make_string(const std::string& str) { return string(str.begin(), str.end()); }
+	inline string make_string(const std::filesystem::path& path) 
+	{ 
+		auto str = path.string(); 
+		return string(str.begin(), str.end()); 
+	}
+
+	inline u16string make_u16string(const std::u16string& str) { return u16string(str.begin(), str.end()); }
+	inline u16string make_u16string(const std::filesystem::path& path)
+	{
+		auto str = path.u16string();
+		return u16string(str.begin(), str.end());
+	}
+
+	inline u32string make_u32string(const std::u32string& str) { return u32string(str.begin(), str.end()); }
+	inline u32string make_u32string(const std::filesystem::path& path)
+	{
+		auto str = path.u32string();
+		return u32string(str.begin(), str.end());
+	}
+
+	inline wstring make_wstring(const std::wstring& str) { return wstring(str.begin(), str.end()); }
+	inline wstring make_wstring(const std::filesystem::path& path)
+	{
+		auto str = path.wstring();
+		return wstring(str.begin(), str.end());
+	}
+
+	[[nodiscard]] inline long long stoll(const string& _Str, size_t* _Idx = nullptr, int _Base = 10) 
+	{
+		int& _Errno_ref = errno;
+		const char* _Ptr = _Str.c_str();
+		char* _Eptr;
+		_Errno_ref = 0;
+		const long long _Ans = std::strtoll(_Ptr, &_Eptr, _Base);
+
+		if (_Ptr == _Eptr) {
+			std::invalid_argument("invalid stoll argument");
+		}
+
+		if (_Errno_ref == ERANGE)
+			std::out_of_range("stoll argument out of range");
+
+		if (_Idx)
+			*_Idx = static_cast<size_t>(_Eptr - _Ptr);
+
+		return _Ans;
+	}
+
+	[[nodiscard]] inline double stod(const string& _Str, size_t* _Idx = nullptr) 
+	{
+		int& _Errno_ref = errno;
+		const char* _Ptr = _Str.c_str();
+		char* _Eptr;
+		_Errno_ref = 0;
+		const double _Ans = std::strtod(_Ptr, &_Eptr);
+
+		if (_Ptr == _Eptr)
+			std::invalid_argument("invalid stod argument");
+
+		if (_Errno_ref == ERANGE)
+			std::out_of_range("stod argument out of range");
+
+		if (_Idx)
+			*_Idx = static_cast<size_t>(_Eptr - _Ptr);
+
+		return _Ans;
+	}
+
+	template<class _Elem>
+	[[nodiscard]] inline basic_string<_Elem> vformat(const std::string_view _Fmt, const std::format_args _Args)
+	{
+		basic_string<_Elem> _Str;
+		_Str.reserve(_Fmt.size() + _Args._Estimate_required_capacity());
+		std::vformat_to(std::back_insert_iterator{ _Str }, _Fmt, _Args);
+		return _Str;
+	}
+
+	template<class _Elem>
+	[[nodiscard]] basic_string<_Elem> vformat(const std::locale& _Loc, const std::string_view _Fmt, const std::format_args _Args)
+	{
+		basic_string<_Elem> _Str;
+		_Str.reserve(_Fmt.size() + _Args._Estimate_required_capacity());
+		std::vformat_to(std::back_insert_iterator{ _Str }, _Loc, _Fmt, _Args);
+		return _Str;
+	}
+
+	template <class... _Types>
+	[[nodiscard]] inline string format(const std::format_string<_Types...> _Fmt, _Types&&... _Args)
+	{
+		return vformat<char>(_Fmt.get(), std::make_format_args(_Args...));
+	}
+
+	template <class... _Types>
+	[[nodiscard]] inline wstring format(const std::wformat_string<_Types...> _Fmt, _Types&&... _Args)
+	{
+		return vformat<wchar_t>(_Fmt.get(), std::make_wformat_args(_Args...));
+	}
+
+	template <class... _Types>
+	[[nodiscard]] inline string format(const std::locale& _Loc, const std::format_string<_Types...> _Fmt, _Types&&... _Args)
+	{
+		return vformat<char>(_Loc, _Fmt.get(), std::make_format_args(_Args...));
+	}
+
+	template <class... _Types>
+	[[nodiscard]] inline wstring format(const std::locale& _Loc, const std::wformat_string<_Types...> _Fmt, _Types&&... _Args)
+	{
+		return vformat<wchar_t>(_Loc, _Fmt.get(), std::make_wformat_args(_Args...));
+	}
+
+
 	template<class _Ty, class _KTy>
 	inline constexpr _Ty cast(_KTy object)
 	{
