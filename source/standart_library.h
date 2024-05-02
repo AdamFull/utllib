@@ -63,6 +63,190 @@ using f64 = double;
 
 namespace utl
 {
+	template<class _Ty, class _KTy>
+	inline constexpr _Ty cast(_KTy object)
+	{
+		return static_cast<_Ty>(object);
+	}
+
+	template<class _Ty, class _ReturnType = typename std::underlying_type<_Ty>::type>
+	inline constexpr _ReturnType enum_cast(_Ty enum_value)
+	{
+		return cast<_ReturnType>(enum_value);
+	}
+
+	// U16 packing
+	constexpr inline const u16 pack_u16_8x2(u8 lhs, u8 rhs)
+	{
+		return (rhs << 8) | (lhs & 0xFF);
+	}
+
+	inline const void unpack_u32_16x2(u16 packed, u8& lhs, u8& rhs)
+	{
+		rhs = cast<u8>(packed >> 8);
+		lhs = cast<u8>(packed & 0xFF);
+	}
+
+	// U32 packing
+	constexpr inline const u32 pack_u32_16x2(u16 lhs, u16 rhs)
+	{
+		return (rhs << 16) | (lhs & 0xFFFF);
+	}
+
+	inline const void unpack_u32_16x2(u32 packed, u16& lhs, u16& rhs)
+	{
+		rhs = cast<u16>(packed >> 16);
+		lhs = cast<u16>(packed & 0xFFFF);
+	}
+
+	constexpr inline const u32 pack_u32_8x4(u8 l0, u8 l1, u8 r0, u8 r1)
+	{
+		return (l0 << 24) + (l1 << 16) + (r0 << 8) + r1;
+	}
+
+	inline const void unpack_u32_8x4(u32 packed, u8& l0, u8& l1, u8& r0, u8& r1)
+	{
+		l0 = (packed & 0xff000000) >> 24;
+		l1 = (packed & 0x00ff0000) >> 16;
+		r0 = (packed & 0x0000ff00) >> 8;
+		r1 = (packed & 0x000000ff);
+	}
+
+	// U64 packing
+	//constexpr inline const u64 pack_u64_8x8(u8 l0, u8 l1, u8 l2, u8 l3, u8 r0, u8 r1, u8 r2, u8 r3)
+	//{
+	//	return (l1 << 56ull) + (l1 << 48ull) + (l2 << 40ull) + (l3 << 32ull) + (r0 << 24ull) + (r1 << 16ull) + (r2 << 8ull) + r3;
+	//}
+	//
+	//inline const void unpack_u64_8x8(u64 packed, u8& l0, u8& l1, u8& l2, u8& l3, u8& r0, u8& r1, u8& r2, u8& r3)
+	//{
+	//	l0 = (packed & 0xff00000000000000ull) >> 56ull;
+	//	l1 = (packed & 0x00ff000000000000ull) >> 48ull;
+	//	l2 = (packed & 0x0000ff0000000000ull) >> 40ull;
+	//	l3 = (packed & 0x000000ff00000000ull) >> 32ull;
+	//	r0 = (packed & 0x00000000ff000000ull) >> 24ull;
+	//	r1 = (packed & 0x0000000000ff0000ull) >> 16ull;
+	//	r2 = (packed & 0x000000000000ff00ull) >> 8ull;
+	//	r3 = (packed & 0x00000000000000ffull);
+	//}
+	//
+	//constexpr inline const u64 pack_u64_16x4(u16 l0, u16 l1, u16 r0, u16 r1)
+	//{
+	//	return (l0 << 48ull) + (l1 << 32ull) + (r0 << 16ull) + r1;
+	//}
+	//
+	//inline const void unpack_u64_16x4(u64 packed, u16& l0, u16& l1, u16& r0, u16& r1)
+	//{
+	//	l0 = (packed & 0xffff000000000000ull) >> 48ull;
+	//	l1 = (packed & 0x0000ffff00000000ull) >> 32ull;
+	//	r0 = (packed & 0x00000000ffff0000ull) >> 16ull;
+	//	r1 = (packed & 0x000000000000ffffull);
+	//}
+	//
+	//constexpr inline const u64 pack_u64_32x2(u32 lhs, u32 rhs)
+	//{
+	//	return (lhs << 32ull) + rhs;
+	//}
+	//
+	//inline const void unpack_u64_32x2(u64 packed, u32& lhs, u32& rhs)
+	//{
+	//	lhs = (packed & 0xffffffff00000000ull) >> 32ull;
+	//	rhs = (packed & 0x00000000ffffffffull);
+	//}
+
+	template<class _Ty>
+	inline void release_ptr(const std::allocator<_Ty>& alloc, _Ty*& ptr, size_t count = 1ull)
+	{
+		if (ptr)
+		{
+			alloc.destroy(ptr);
+			alloc.deallocate(ptr, count);
+			ptr = nullptr;
+		}
+	}
+
+	template<class _Ty>
+	inline void release_ptr(_Ty*& ptr)
+	{
+		if (ptr)
+		{
+			delete ptr;
+			ptr = nullptr;
+		}
+	}
+
+	template<class _Ty>
+	inline void release_arr(_Ty*& ptr)
+	{
+		if (ptr)
+		{
+			delete[] ptr;
+			ptr = nullptr;
+		}
+	}
+
+	constexpr inline u32 fnv1a_32_hash(const char* str, u32 len, u32 hash = 2166136261u) noexcept
+	{
+		for(u32 idx = 0u; idx < len; ++idx)
+			hash = (hash ^ cast<u32>(str[idx])) * 16777619u;
+		return hash;
+	}
+
+	constexpr inline u64 fnv1a_64_hash(const char* str, u64 len, u64 hash = 14695981039346656037ull) noexcept
+	{
+		for (u64 idx = 0ull; idx < len; ++idx)
+			hash = (hash ^ cast<u64>(str[idx])) * 1099511628211ull;
+		return hash;
+	}
+
+	inline constexpr u32 fnv1a_32_hash_cstr(const char* str, u32 hash = 2166136261u) noexcept
+	{
+		while (*str != '\0')
+		{
+			hash = (hash ^ cast<u32>(*str)) * 16777619u;
+			str++;
+		}
+		return hash;
+	}
+	
+	inline constexpr uint64_t fnv1a_64_hash_cstr(const char* str, u64 hash = 14695981039346656037ull) noexcept
+	{
+		while (*str != '\0')
+		{
+			hash = (hash ^ cast<u64>(*str)) * 1099511628211ull;
+			str++;
+		}
+		return hash;
+	}
+
+
+	template<class _Ty>
+	struct hash 
+	{
+		u64 operator()(const _Ty& data) const
+		{
+			return fnv1a_64_hash(reinterpret_cast<const char*>(&data), sizeof(_Ty));
+		}
+	};
+
+	template<>
+	struct hash<std::string>
+	{
+		u64 operator()(const std::string& data) const
+		{
+			return fnv1a_64_hash(data.c_str(), data.size());
+		}
+	};
+
+	template<>
+	struct hash<std::basic_string<char, std::char_traits<char>, mi_stl_allocator<char>>>
+	{
+		u64 operator()(const std::basic_string<char, std::char_traits<char>, mi_stl_allocator<char>>& data) const
+		{
+			return fnv1a_64_hash(data.c_str(), data.size());
+		}
+	};
+
 	template<class _Kty, class _Ty,
 		class _Hasher = std::hash<_Kty>,
 		class _Keyeq = std::equal_to<_Kty>,
@@ -200,128 +384,5 @@ namespace utl
 	[[nodiscard]] inline wstring format(const std::locale& _Loc, const std::wformat_string<_Types...> _Fmt, _Types&&... _Args)
 	{
 		return vformat<wchar_t>(_Loc, _Fmt.get(), std::make_wformat_args(_Args...));
-	}
-
-
-	template<class _Ty, class _KTy>
-	inline constexpr _Ty cast(_KTy object)
-	{
-		return static_cast<_Ty>(object);
-	}
-
-	template<class _Ty, class _ReturnType = typename std::underlying_type<_Ty>::type>
-	inline constexpr _ReturnType enum_cast(_Ty enum_value)
-	{
-		return cast<_ReturnType>(enum_value);
-	}
-
-	// U16 packing
-	constexpr inline const u16 pack_u16_8x2(u8 lhs, u8 rhs)
-	{
-		return (rhs << 8) | (lhs & 0xFF);
-	}
-
-	inline const void unpack_u32_16x2(u16 packed, u8& lhs, u8& rhs)
-	{
-		rhs = cast<u8>(packed >> 8);
-		lhs = cast<u8>(packed & 0xFF);
-	}
-
-	// U32 packing
-	constexpr inline const u32 pack_u32_16x2(u16 lhs, u16 rhs)
-	{
-		return (rhs << 16) | (lhs & 0xFFFF);
-	}
-
-	inline const void unpack_u32_16x2(u32 packed, u16& lhs, u16& rhs)
-	{
-		rhs = cast<u16>(packed >> 16);
-		lhs = cast<u16>(packed & 0xFFFF);
-	}
-
-	constexpr inline const u32 pack_u32_8x4(u8 l0, u8 l1, u8 r0, u8 r1)
-	{
-		return (l0 << 24) + (l1 << 16) + (r0 << 8) + r1;
-	}
-
-	inline const void unpack_u32_8x4(u32 packed, u8& l0, u8& l1, u8& r0, u8& r1)
-	{
-		l0 = (packed & 0xff000000) >> 24;
-		l1 = (packed & 0x00ff0000) >> 16;
-		r0 = (packed & 0x0000ff00) >> 8;
-		r1 = (packed & 0x000000ff);
-	}
-
-	// U64 packing
-	//constexpr inline const u64 pack_u64_8x8(u8 l0, u8 l1, u8 l2, u8 l3, u8 r0, u8 r1, u8 r2, u8 r3)
-	//{
-	//	return (l1 << 56ull) + (l1 << 48ull) + (l2 << 40ull) + (l3 << 32ull) + (r0 << 24ull) + (r1 << 16ull) + (r2 << 8ull) + r3;
-	//}
-	//
-	//inline const void unpack_u64_8x8(u64 packed, u8& l0, u8& l1, u8& l2, u8& l3, u8& r0, u8& r1, u8& r2, u8& r3)
-	//{
-	//	l0 = (packed & 0xff00000000000000ull) >> 56ull;
-	//	l1 = (packed & 0x00ff000000000000ull) >> 48ull;
-	//	l2 = (packed & 0x0000ff0000000000ull) >> 40ull;
-	//	l3 = (packed & 0x000000ff00000000ull) >> 32ull;
-	//	r0 = (packed & 0x00000000ff000000ull) >> 24ull;
-	//	r1 = (packed & 0x0000000000ff0000ull) >> 16ull;
-	//	r2 = (packed & 0x000000000000ff00ull) >> 8ull;
-	//	r3 = (packed & 0x00000000000000ffull);
-	//}
-	//
-	//constexpr inline const u64 pack_u64_16x4(u16 l0, u16 l1, u16 r0, u16 r1)
-	//{
-	//	return (l0 << 48ull) + (l1 << 32ull) + (r0 << 16ull) + r1;
-	//}
-	//
-	//inline const void unpack_u64_16x4(u64 packed, u16& l0, u16& l1, u16& r0, u16& r1)
-	//{
-	//	l0 = (packed & 0xffff000000000000ull) >> 48ull;
-	//	l1 = (packed & 0x0000ffff00000000ull) >> 32ull;
-	//	r0 = (packed & 0x00000000ffff0000ull) >> 16ull;
-	//	r1 = (packed & 0x000000000000ffffull);
-	//}
-	//
-	//constexpr inline const u64 pack_u64_32x2(u32 lhs, u32 rhs)
-	//{
-	//	return (lhs << 32ull) + rhs;
-	//}
-	//
-	//inline const void unpack_u64_32x2(u64 packed, u32& lhs, u32& rhs)
-	//{
-	//	lhs = (packed & 0xffffffff00000000ull) >> 32ull;
-	//	rhs = (packed & 0x00000000ffffffffull);
-	//}
-
-	template<class _Ty>
-	inline void release_ptr(const std::allocator<_Ty>& alloc, _Ty*& ptr, size_t count = 1ull)
-	{
-		if(ptr)
-		{
-			alloc.destroy(ptr);
-        	alloc.deallocate(ptr, count);
-        	ptr = nullptr;
-		}
-	}
-
-	template<class _Ty>
-	inline void release_ptr(_Ty*& ptr)
-	{
-		if(ptr)
-		{
-			delete ptr;
-			ptr = nullptr;
-		}
-	}
-
-	template<class _Ty>
-	inline void release_arr(_Ty*& ptr)
-	{
-		if(ptr)
-		{
-			delete[] ptr;
-			ptr = nullptr;
-		}
 	}
 }

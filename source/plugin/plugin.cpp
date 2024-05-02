@@ -164,7 +164,7 @@ bool uplugin::load(const utl::vector<u8>& data)
 			const auto addRVA = ((DWORD*)((DWORD_PTR)m_pModule + lpImageExportDirectory->AddressOfFunctions))[lpCurrentOridnal];
 			UnDecorateSymbolName(lpCurrentFunctionName, lpCurrentFnctionNameDemangled, sizeof(lpCurrentFnctionNameDemangled), UNDNAME_COMPLETE);
 
-			m_tableMap[utils::fnv1a_64_hash(lpCurrentFnctionNameDemangled)] = lpCurrentOridnal;
+			m_tableMap[fnv1a_64_hash_cstr(lpCurrentFnctionNameDemangled)] = lpCurrentOridnal;
 			m_vFunctionTable.at(lpCurrentOridnal) = ((DWORD_PTR)m_pModule + addRVA);
 		}
 	}
@@ -211,7 +211,7 @@ bool uplugin::unload()
 
 intptr_t uplugin::getFunctionAddress(const char* function_name)
 {
-	auto hash = utils::fnv1a_64_hash(function_name);
+	auto hash = fnv1a_64_hash_cstr(function_name);
 	if (auto found = m_tableMap.find(hash); found != m_tableMap.end())
 		return getFunctionAddress(found->second);
 

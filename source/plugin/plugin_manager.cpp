@@ -27,7 +27,7 @@ const std::unique_ptr<uplugin>& uplugin_manager::load(const char* name, const st
 		auto new_plugin = std::make_unique<uplugin>();
 		if (new_plugin->load(data))
 		{
-			auto name_hash = utils::fnv1a_64_hash(name);
+			auto name_hash = fnv1a_64_hash_cstr(name);
 			m_pluginMap.emplace(name_hash, std::move(new_plugin));
 			return m_pluginMap[name_hash];
 		}
@@ -38,7 +38,7 @@ const std::unique_ptr<uplugin>& uplugin_manager::load(const char* name, const st
 
 void uplugin_manager::unload(const char* name)
 {
-	if (auto found = m_pluginMap.find(utils::fnv1a_64_hash(name)); found != m_pluginMap.end())
+	if (auto found = m_pluginMap.find(fnv1a_64_hash_cstr(name)); found != m_pluginMap.end())
 	{
 		found->second->unload();
 		m_pluginMap.erase(found);
