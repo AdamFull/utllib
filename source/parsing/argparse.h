@@ -109,7 +109,12 @@ namespace utl
 
 				const auto& svalue = parsed[key];
 				if constexpr (std::is_same_v<_Ty, std::string>)
-					return svalue;
+				{
+					if(!svalue.empty())
+						return svalue;
+
+					return default_value;
+				}
 
 				std::istringstream iss(svalue);
 				if (!(iss >> result))
