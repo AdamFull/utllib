@@ -16,7 +16,6 @@
 
 #include "plugin/plugin_manager.h"
 
-#include "reactive/command_processor.h"
 #include "reactive/variable.h"
 #include "reactive/event_dispatcher.h"
 

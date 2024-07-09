@@ -39,6 +39,6 @@ namespace utl
 		u64 size() const noexcept { return _size; }
 	private:
 		_Ty* _data{ nullptr };
-		u64 _size{ nullptr };
+		u64 _size{ 0ull };
 	};
 }
