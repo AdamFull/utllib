@@ -82,7 +82,7 @@ namespace utl
                 auto _formatted_time = get_formatted_time();
                 auto _base = std::format("[{}][{}]",
                     get_level<_level>(), _formatted_time);
-                auto _user_log = std::vformat(fmt, std::make_format_args(std::forward<_Args>(args)...));
+                auto _user_log = std::vformat(fmt, std::make_format_args(args...));
 
                 std::string _trace_data{};
                 if constexpr (_level == ELogLevel::eError)
