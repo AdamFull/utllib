@@ -4,6 +4,7 @@
 #include <initializer_list>
 #include <cstddef>
 #include <cassert>
+#include <new>
 
 namespace utl
 {
@@ -134,6 +135,13 @@ namespace utl
 		alignas(_Alignment) uint8_t memory[_Size];
 	};
 
+	namespace temporary_sizes
+	{
+		constexpr const size_t small_pool_size{ 256 };
+		constexpr const size_t medium_pool_size{ 1024 };
+		constexpr const size_t huge_pool_size{ 2048 };
+	}
+
 	template<size_t _Size, size_t _Alignment = alignof(std::max_align_t)>
 	class ring_memory_pool
 	{
@@ -182,13 +190,20 @@ namespace utl
 		small_buffer<_Size, _Alignment> buffer_;
 	};
 
-	template<typename _Ty, size_t _Count, size_t _Alignment = alignof(std::max_align_t)>
+	template<size_t _Alignment = alignof(std::max_align_t)>
+	using small_temp_pool = ring_memory_pool<temporary_sizes::small_pool_size, _Alignment>;
+	template<size_t _Alignment = alignof(std::max_align_t)>
+	using medium_temp_pool = ring_memory_pool<temporary_sizes::medium_pool_size, _Alignment>;
+	template<size_t _Alignment = alignof(std::max_align_t)>
+	using huge_temp_pool = ring_memory_pool<temporary_sizes::huge_pool_size, _Alignment>;
+
+	template<typename _Ty, size_t _Size, size_t _Alignment = alignof(std::max_align_t)>
 	class temp_allocator
 	{
 	public:
 		using value_type = _Ty;
 
-		temp_allocator() = default;
+		temp_allocator(ring_memory_pool<_Size, _Alignment>& buffer) : buffer_(buffer) {}
 
 		_Ty* allocate(std::size_t n)
 		{
@@ -207,6 +222,15 @@ namespace utl
 			buffer_.deallocate(p, size);
 		}
 	private:
-		ring_memory_pool<_Count * sizeof(_Ty), _Alignment> buffer_;
+		ring_memory_pool<_Size, _Alignment>& buffer_;
 	};
+
+	template<typename _Ty, size_t _Alignment = alignof(std::max_align_t)>
+	using small_temp_allocator_t = temp_allocator<_Ty, temporary_sizes::small_pool_size, _Alignment>;
+
+	template<typename _Ty, size_t _Alignment = alignof(std::max_align_t)>
+	using medium_temp_allocator_t = temp_allocator<_Ty, temporary_sizes::medium_pool_size, _Alignment>;
+
+	template<typename _Ty, size_t _Alignment = alignof(std::max_align_t)>
+	using huge_temp_allocator_t = temp_allocator<_Ty, temporary_sizes::huge_pool_size, _Alignment>;
 }
