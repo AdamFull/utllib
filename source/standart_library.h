@@ -344,45 +344,45 @@ namespace utl
 		return _Ans;
 	}
 
-	template<class _Elem>
-	[[nodiscard]] inline basic_string<_Elem> vformat(const std::string_view _Fmt, const std::format_args _Args)
-	{
-		basic_string<_Elem> _Str;
-		_Str.reserve(_Fmt.size() + _Args._Estimate_required_capacity());
-		std::vformat_to(std::back_insert_iterator{ _Str }, _Fmt, _Args);
-		return _Str;
-	}
-
-	template<class _Elem>
-	[[nodiscard]] basic_string<_Elem> vformat(const std::locale& _Loc, const std::string_view _Fmt, const std::format_args _Args)
-	{
-		basic_string<_Elem> _Str;
-		_Str.reserve(_Fmt.size() + _Args._Estimate_required_capacity());
-		std::vformat_to(std::back_insert_iterator{ _Str }, _Loc, _Fmt, _Args);
-		return _Str;
-	}
-
-	template <class... _Types>
-	[[nodiscard]] inline string format(const std::format_string<_Types...> _Fmt, _Types&&... _Args)
-	{
-		return vformat<char>(_Fmt.get(), std::make_format_args(_Args...));
-	}
-
-	template <class... _Types>
-	[[nodiscard]] inline wstring format(const std::wformat_string<_Types...> _Fmt, _Types&&... _Args)
-	{
-		return vformat<wchar_t>(_Fmt.get(), std::make_wformat_args(_Args...));
-	}
-
-	template <class... _Types>
-	[[nodiscard]] inline string format(const std::locale& _Loc, const std::format_string<_Types...> _Fmt, _Types&&... _Args)
-	{
-		return vformat<char>(_Loc, _Fmt.get(), std::make_format_args(_Args...));
-	}
-
-	template <class... _Types>
-	[[nodiscard]] inline wstring format(const std::locale& _Loc, const std::wformat_string<_Types...> _Fmt, _Types&&... _Args)
-	{
-		return vformat<wchar_t>(_Loc, _Fmt.get(), std::make_wformat_args(_Args...));
-	}
+	//template<class _Elem>
+	//[[nodiscard]] inline basic_string<_Elem> vformat(const std::string_view _Fmt, const std::format_args _Args)
+	//{
+	//	basic_string<_Elem> _Str;
+	//	_Str.reserve(_Fmt.size() + _Args._Estimate_required_capacity());
+	//	std::vformat_to(std::back_insert_iterator{ _Str }, _Fmt, _Args);
+	//	return _Str;
+	//}
+	//
+	//template<class _Elem>
+	//[[nodiscard]] basic_string<_Elem> vformat(const std::locale& _Loc, const std::string_view _Fmt, const std::format_args _Args)
+	//{
+	//	basic_string<_Elem> _Str;
+	//	_Str.reserve(_Fmt.size() + _Args._Estimate_required_capacity());
+	//	std::vformat_to(std::back_insert_iterator{ _Str }, _Loc, _Fmt, _Args);
+	//	return _Str;
+	//}
+	//
+	//template <class... _Types>
+	//[[nodiscard]] inline string format(const std::format_string<_Types...> _Fmt, _Types&&... _Args)
+	//{
+	//	return vformat<char>(_Fmt.get(), std::make_format_args(_Args...));
+	//}
+	//
+	//template <class... _Types>
+	//[[nodiscard]] inline wstring format(const std::wformat_string<_Types...> _Fmt, _Types&&... _Args)
+	//{
+	//	return vformat<wchar_t>(_Fmt.get(), std::make_wformat_args(_Args...));
+	//}
+	//
+	//template <class... _Types>
+	//[[nodiscard]] inline string format(const std::locale& _Loc, const std::format_string<_Types...> _Fmt, _Types&&... _Args)
+	//{
+	//	return vformat<char>(_Loc, _Fmt.get(), std::make_format_args(_Args...));
+	//}
+	//
+	//template <class... _Types>
+	//[[nodiscard]] inline wstring format(const std::locale& _Loc, const std::wformat_string<_Types...> _Fmt, _Types&&... _Args)
+	//{
+	//	return vformat<wchar_t>(_Loc, _Fmt.get(), std::make_wformat_args(_Args...));
+	//}
 }
