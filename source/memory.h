@@ -1,6 +1,8 @@
 #pragma once
 
+#include <atomic>
 #include <initializer_list>
+#include <cstddef>
 #include <cassert>
 
 namespace utl
@@ -25,7 +27,7 @@ namespace utl
 	{
 		return (size + alignment - 1) & ~(alignment - 1);
 	}
-
+	
 	class raw_memory_view
 	{
 	public:
@@ -92,12 +94,12 @@ namespace utl
 	class buffer
 	{
 	public:
-		buffer(std::size_t size, std::size_t align = 8ull);
+		buffer(std::size_t size, std::size_t align = alignof(std::max_align_t));
 		~buffer();
 
 		bool valid() const;
 
-		uint16_t resize(std::size_t new_size, std::size_t align = 8ull);
+		uint16_t resize(std::size_t new_size, std::size_t align = alignof(std::max_align_t));
 
 		std::size_t size() const;
 
@@ -108,7 +110,7 @@ namespace utl
 		std::size_t aligned_size_{ 0ull };
 	};
 
-	template<size_t _Size, size_t _Alignment = 8ull>
+	template<size_t _Size, size_t _Alignment = alignof(std::max_align_t)>
 	class small_buffer
 	{
 	public:
@@ -130,5 +132,81 @@ namespace utl
 		}
 	private:
 		alignas(_Alignment) uint8_t memory[_Size];
+	};
+
+	template<size_t _Size, size_t _Alignment = alignof(std::max_align_t)>
+	class ring_memory_pool
+	{
+	public:
+		ring_memory_pool()
+			: head_(0ull), tail_(0ull) {}
+
+		void* allocate(std::size_t size)
+		{
+			size = aligned_size(size, _Alignment);
+			std::size_t current_tail = tail_.load(std::memory_order_relaxed);
+			std::size_t next_tail = (current_tail + size) % _Size;
+
+			if (next_tail == head_.load(std::memory_order_acquire))
+			{
+				// Buffer is full
+				return nullptr;
+			}
+
+			void* ptr = buffer_.get_raw_memory_view().data() + current_tail;
+			tail_.store(next_tail, std::memory_order_release);
+			return ptr;
+		}
+
+		void deallocate(void* ptr, std::size_t size)
+		{
+			// In a lock-free ring buffer, deallocation is typically a no-op,
+			// as we only move the head and tail pointers. However, we can implement
+			// a safety check if needed. The below code does not deallocate memory
+			// but shows how you might move the head if necessary.
+
+			size = aligned_size(size, _Alignment);
+			std::size_t current_head = head_.load(std::memory_order_relaxed);
+
+			// Optional: Add safety checks if needed
+			// if (ptr != buffer_.get_raw_memory_view().data() + current_head) {
+			//     throw std::runtime_error("Invalid deallocation");
+			// }
+
+			head_.store((current_head + size) % _Size, std::memory_order_release);
+		}
+		
+	private:
+		std::atomic<std::size_t> head_;
+		std::atomic<std::size_t> tail_;
+		small_buffer<_Size, _Alignment> buffer_;
+	};
+
+	template<typename _Ty, size_t _Count, size_t _Alignment = alignof(std::max_align_t)>
+	class temp_allocator
+	{
+	public:
+		using value_type = _Ty;
+
+		temp_allocator() = default;
+
+		_Ty* allocate(std::size_t n)
+		{
+			std::size_t size = aligned_size(n * sizeof(_Ty), _Alignment);
+			void* ptr = buffer_.allocate(size);
+			if (!ptr)
+			{
+				throw std::bad_alloc();
+			}
+			return static_cast<_Ty*>(ptr);
+		}
+
+		void deallocate(_Ty* p, std::size_t n)
+		{
+			std::size_t size = aligned_size(n * sizeof(_Ty), _Alignment);
+			buffer_.deallocate(p, size);
+		}
+	private:
+		ring_memory_pool<_Count * sizeof(_Ty), _Alignment> buffer_;
 	};
 }
