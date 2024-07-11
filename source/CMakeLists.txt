@@ -17,7 +17,6 @@ file(GLOB UTILITY_LIB_SOURCES *.cpp)
 add_library(${PROJECT_NAME} STATIC ${UTILITY_LIB_SOURCES})
 
 target_link_libraries(${PROJECT_NAME}
-    PUBLIC mimalloc
     PRIVATE utility_container
     PRIVATE utility_debugging
     PRIVATE utility_design_pattern

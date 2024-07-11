@@ -2,8 +2,6 @@
 #include <standart_library.h>
 #include <container/hash_map.h>
 
-static int allocator_version = mi_version();
-
 #include <benchmark/benchmark.h>
 
 static int counter = 0;

@@ -9,7 +9,6 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(UTILITY_LIB_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 
 find_package(Backward CONFIG REQUIRED)
-find_package(mimalloc REQUIRED NO_SYSTEM_ENVIRONMENT_PATH)
 
 add_subdirectory(source)
 add_subdirectory(test)

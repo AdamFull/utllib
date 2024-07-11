@@ -7,8 +7,6 @@
 
 #include <cassert>
 
-#include <mimalloc.h>
-
 using i8 = int8_t;
 using u8 = uint8_t;
 using i16 = int16_t;
@@ -238,42 +236,42 @@ namespace utl
 		}
 	};
 
-	template<>
-	struct hash<std::basic_string<char, std::char_traits<char>, mi_stl_allocator<char>>>
-	{
-		u64 operator()(const std::basic_string<char, std::char_traits<char>, mi_stl_allocator<char>>& data) const
-		{
-			return fnv1a_64_hash(data.c_str(), data.size());
-		}
-	};
+	//template<>
+	//struct hash<std::basic_string<char, std::char_traits<char>, std::allocator<char>>>
+	//{
+	//	u64 operator()(const std::basic_string<char, std::char_traits<char>, std::allocator<char>>& data) const
+	//	{
+	//		return fnv1a_64_hash(data.c_str(), data.size());
+	//	}
+	//};
 
 	template<class _Kty, class _Ty,
 		class _Hasher = std::hash<_Kty>,
 		class _Keyeq = std::equal_to<_Kty>,
-		class _Alloc = mi_stl_allocator<std::pair<const _Kty, _Ty>>>
+		class _Alloc = std::allocator<std::pair<const _Kty, _Ty>>>
 	using hash_map = std::unordered_map<_Kty, _Ty, _Hasher, _Keyeq, _Alloc>;
 
-	template<class _Ty, class _Alloc = mi_stl_allocator<_Ty>>
+	template<class _Ty, class _Alloc = std::allocator<_Ty>>
 	using vector = std::vector<_Ty, _Alloc>;
 
 	template<class _Elem>
-	using basic_string = std::basic_string<_Elem, std::char_traits<_Elem>, mi_stl_allocator<_Elem>>;
+	using basic_string = std::basic_string<_Elem, std::char_traits<_Elem>, std::allocator<_Elem>>;
 	
 	using string = basic_string<char>;
 	using wstring = basic_string<wchar_t>;
 	using u16string = basic_string<char16_t>;
 	using u32string = basic_string<char32_t>;
 
-	using stringstream = std::basic_stringstream<char, std::char_traits<char>, mi_stl_allocator<char>>;
-	using wstringstream = std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, mi_stl_allocator<wchar_t>>;
+	using stringstream = std::basic_stringstream<char, std::char_traits<char>, std::allocator<char>>;
+	using wstringstream = std::basic_stringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>;
 
-	using istringstream = std::basic_istringstream<char, std::char_traits<char>, mi_stl_allocator<char>>;
-	using wistringstream = std::basic_istringstream<wchar_t, std::char_traits<wchar_t>, mi_stl_allocator<wchar_t>>;
-	using ostringstream = std::basic_ostringstream<char, std::char_traits<char>, mi_stl_allocator<char>>;
-	using wostringstream = std::basic_ostringstream<wchar_t, std::char_traits<wchar_t>, mi_stl_allocator<wchar_t>>;
+	using istringstream = std::basic_istringstream<char, std::char_traits<char>, std::allocator<char>>;
+	using wistringstream = std::basic_istringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>;
+	using ostringstream = std::basic_ostringstream<char, std::char_traits<char>, std::allocator<char>>;
+	using wostringstream = std::basic_ostringstream<wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t>>;
 
 	template<class _Codecvt, class _Elem = wchar_t>
-	using wstring_convert = std::wstring_convert<_Codecvt, _Elem, mi_stl_allocator<_Elem>, mi_stl_allocator<char>>;
+	using wstring_convert = std::wstring_convert<_Codecvt, _Elem, std::allocator<_Elem>, std::allocator<char>>;
 
 	inline string make_string(const std::string& str) { return string(str.begin(), str.end()); }
 	inline string make_string(const std::filesystem::path& path) 

@@ -4,6 +4,7 @@
 #include <initializer_list>
 #include <cstddef>
 #include <cassert>
+#include <memory>
 #include <new>
 
 namespace utl
@@ -14,14 +15,19 @@ namespace utl
 		constexpr const size_t bad_alloc = (~0ull) - (size_t)(1 << 0);
 	}
 
-	inline void* ptr_offset(void* ptr, size_t offset)
+	inline constexpr void* ptr_offset(void* ptr, size_t offset)
 	{
 		return (void*)((char*)ptr + offset);
 	}
 
-	inline const void* ptr_offset(const void* ptr, size_t offset)
+	inline constexpr const void* ptr_offset(const void* ptr, size_t offset)
 	{
 		return (const void*)((const char*)ptr + offset);
+	}
+
+	inline constexpr std::ptrdiff_t ptr_distance(const void* start, const void* end)
+	{
+		return (const char*)end - (const char*)start;
 	}
 
 	constexpr std::size_t aligned_size(std::size_t size, std::size_t alignment) 
@@ -35,58 +41,58 @@ namespace utl
 		constexpr raw_memory_view() noexcept : data_{ nullptr }, size_{ 0ull } {}
 
 		template <typename _Ty>
-		raw_memory_view(_Ty const& val) noexcept : data_{ &val }, size_{ sizeof(_Ty) } {}
+		constexpr raw_memory_view(_Ty const& val) noexcept : data_{ &val }, size_{ sizeof(_Ty) } {}
 
-		raw_memory_view(std::size_t size, void* data) : data_{ data }, size_{ size } {}
+		constexpr raw_memory_view(std::size_t size, void* data) : data_{ data }, size_{ size } {}
 
 		template<typename _Ty, std::size_t _Size>
-		raw_memory_view(_Ty const(&arr)[_Size]) noexcept : data_{ arr }, size_{ _Size * sizeof(_Ty) } {}
+		constexpr raw_memory_view(_Ty (&arr)[_Size]) noexcept : data_{ &arr[0]}, size_{_Size * sizeof(_Ty)} {}
 
 		template <typename _Ty>
-		raw_memory_view(std::initializer_list<_Ty> const& list) noexcept : data_{ list.begin() }, size_{ list.size() * sizeof(_Ty) } {}
+		constexpr raw_memory_view(std::initializer_list<_Ty> const& list) noexcept : data_{ list.begin() }, size_{ list.size() * sizeof(_Ty) } {}
 
 		template <typename _Ty, typename std::enable_if<std::is_const<_Ty>::value, int>::type = 0>
-		raw_memory_view(std::initializer_list<typename std::remove_const<_Ty>::type> const& list) noexcept : data_{ list.begin() }, size_{ list.size() * sizeof(_Ty) } {}
+		constexpr raw_memory_view(std::initializer_list<typename std::remove_const<_Ty>::type> const& list) noexcept : data_{ list.begin() }, size_{ list.size() * sizeof(_Ty) } {}
 
-		const void* begin() const noexcept { return data_; }
-		const void* end() const noexcept { return ptr_offset(data_, size_); }
+		constexpr const void* begin() const noexcept { return data_; }
+		constexpr const void* end() const noexcept { return ptr_offset(data_, size_); }
 
-		bool check_bounds(void* ptr) const
+		constexpr bool check_bounds(void* ptr) const
 		{
 			return !(!ptr || ptr < begin() || ptr >= end());
 		}
 
 		// Runtime check functions
 		template<typename _Ty>
-		_Ty* as(std::size_t byte_offset)
+		constexpr _Ty* as(std::size_t byte_offset)
 		{
 			assert((byte_offset + sizeof(_Ty) < size_) && "Pointer is out of bounds");
 			return (_Ty*)get(byte_offset);
 		}
 
 		template<typename _Ty>
-		const _Ty* as(std::size_t byte_offset) const
+		constexpr const _Ty* as(std::size_t byte_offset) const
 		{
 			assert((byte_offset + sizeof(_Ty) < size_) && "Pointer is out of bounds");
 			return (_Ty*)get(byte_offset);
 		}
 
-		void* get(std::size_t byte_offset)
+		constexpr void* get(std::size_t byte_offset)
 		{
 			assert((byte_offset < size_) && "Index out of bounds");
 			return ptr_offset(data_, byte_offset);
 		}
 
-		const void* get(std::size_t byte_offset) const
+		constexpr const void* get(std::size_t byte_offset) const
 		{
 			assert((byte_offset < size_) && "Index out of bounds");
 			return ptr_offset(data_, byte_offset);
 		}
 
-		bool empty() const noexcept { return (size_ == 0); }
+		constexpr bool empty() const noexcept { return (size_ == 0); }
 
-		std::size_t size() const noexcept { return size_; }
-		void const* data() const noexcept { return data_; }
+		constexpr std::size_t size() const noexcept { return size_; }
+		constexpr void const* data() const noexcept { return data_; }
 	private:
 		void* data_{ nullptr };
 		std::size_t size_{};
@@ -115,21 +121,21 @@ namespace utl
 	class small_buffer
 	{
 	public:
-		small_buffer() = default;
+		constexpr small_buffer() {}
 
-		bool valid() const
+		constexpr bool valid() const
 		{
 			return true;
 		}
 
-		std::size_t size()
+		constexpr std::size_t size()
 		{
 			return aligned_size(_Size, _Alignment);
 		}
 
-		raw_memory_view get_raw_memory_view()
+		constexpr raw_memory_view get_raw_memory_view()
 		{
-			return raw_memory_view(_Size, memory);
+			return raw_memory_view(memory);
 		}
 	private:
 		alignas(_Alignment) uint8_t memory[_Size];
@@ -142,14 +148,66 @@ namespace utl
 		constexpr const size_t huge_pool_size{ 2048 };
 	}
 
+	template<size_t _InitialSize, size_t _Alignment = alignof(std::max_align_t)>
+	class memory_pool
+	{
+	public:
+		struct free_block;
+		{
+			free_block* next{ nullptr };
+		};
+
+		constexpr memory_pool() throw()
+		{
+			auto mem_view = buffer_.get_raw_memory_view();
+
+			free_list_ = mem_view.as<free_block>(0ull);
+			free_list_->size = mem_view.size();
+			free_list_->next = nullptr;
+		}
+
+		[[nodiscard]] inline void* allocate(std::size_t count, std::size_t size)
+		{
+			std::size_t allocation_size = aligned_size(count * size, _Alignment);
+
+		}
+
+		inline void* deallocate(void* ptr, std::size_t count, std::size_t size)
+		{
+
+		}
+	protected:
+		inline std::size_t get_size_remain()
+		{
+			// free_block size should be already aligned. Not need to align it again
+			return ptr_distance(free_list_, buffer_.get_raw_memory_view().end()) + sizeof(free_block);
+		}
+
+		free_block* lookup_free_block()
+		{
+			free_block* prev = nullptr;
+			free_block* curr = free_list_;
+
+			while (curr)
+			{
+
+			}
+
+			return nullptr;
+		}
+	private:
+		buffer buffer_{ _InitialSize, _Alignment };
+		free_block* free_list_{ nullptr };
+	};
+
 	template<size_t _Size, size_t _Alignment = alignof(std::max_align_t)>
 	class ring_memory_pool
 	{
 	public:
-		ring_memory_pool()
+		constexpr ring_memory_pool()
 			: head_(0ull), tail_(0ull) {}
 
-		void* allocate(std::size_t size)
+		[[nodiscard]] constexpr void* allocate(std::size_t size)
 		{
 			size = aligned_size(size, _Alignment);
 			std::size_t current_tail = tail_.load(std::memory_order_relaxed);
@@ -161,12 +219,12 @@ namespace utl
 				return nullptr;
 			}
 
-			void* ptr = buffer_.get_raw_memory_view().data() + current_tail;
+			void* ptr = buffer_.get_raw_memory_view().get(current_tail);
 			tail_.store(next_tail, std::memory_order_release);
 			return ptr;
 		}
 
-		void deallocate(void* ptr, std::size_t size)
+		constexpr void deallocate(void* ptr, std::size_t size)
 		{
 			// In a lock-free ring buffer, deallocation is typically a no-op,
 			// as we only move the head and tail pointers. However, we can implement
@@ -202,35 +260,130 @@ namespace utl
 	{
 	public:
 		using value_type = _Ty;
+		using size_type = size_t;
+		using difference_type = ptrdiff_t;
 
-		temp_allocator(ring_memory_pool<_Size, _Alignment>& buffer) : buffer_(buffer) {}
+		template<typename _Other>
+		struct rebind 
+		{
+			using other = temp_allocator<_Other, _Size, _Alignment>;
+		};
 
-		_Ty* allocate(std::size_t n)
+		constexpr temp_allocator(ring_memory_pool<_Size, _Alignment>& buffer) noexcept : buffer_(buffer) {}
+
+		template<typename _Other>
+		constexpr temp_allocator(const temp_allocator<_Other, _Size, _Alignment>& other) noexcept : buffer_(other.buffer_) {}
+
+		[[nodiscard]] constexpr _Ty* allocate(std::size_t n)
 		{
 			std::size_t size = aligned_size(n * sizeof(_Ty), _Alignment);
 			void* ptr = buffer_.allocate(size);
 			if (!ptr)
-			{
 				throw std::bad_alloc();
-			}
+
 			return static_cast<_Ty*>(ptr);
 		}
 
-		void deallocate(_Ty* p, std::size_t n)
+		constexpr void deallocate(_Ty* p, std::size_t n)
 		{
 			std::size_t size = aligned_size(n * sizeof(_Ty), _Alignment);
 			buffer_.deallocate(p, size);
 		}
+
+		template<typename... _Args>
+		constexpr void construct(_Ty* p, _Args&&... args)
+		{
+			if constexpr (!std::is_trivial_v<_Ty>)
+				::new (static_cast<void*>(p)) _Ty(std::forward<_Args>(args)...);
+		}
+
+		constexpr void destroy(_Ty* p)
+		{
+			if constexpr (!std::is_trivial_v<_Ty>)
+				p->~_Ty();
+		}
+
+		inline size_type max_size() const throw() { return _Size / sizeof(_Ty); }
+
+		bool operator==(const temp_allocator& rhs) const noexcept
+		{
+			return &buffer_ == &rhs.buffer_;
+		}
+
+		bool operator!=(const temp_allocator& rhs) const noexcept
+		{
+			return !(*this == rhs);
+		}
 	private:
+		template<typename _Other, size_t _OtherSize, size_t _OtherAlignment>
+		friend class temp_allocator;
+
 		ring_memory_pool<_Size, _Alignment>& buffer_;
 	};
 
 	template<typename _Ty, size_t _Alignment = alignof(std::max_align_t)>
-	using small_temp_allocator_t = temp_allocator<_Ty, temporary_sizes::small_pool_size, _Alignment>;
+	using small_temp_allocator = temp_allocator<_Ty, temporary_sizes::small_pool_size, _Alignment>;
 
 	template<typename _Ty, size_t _Alignment = alignof(std::max_align_t)>
-	using medium_temp_allocator_t = temp_allocator<_Ty, temporary_sizes::medium_pool_size, _Alignment>;
+	using medium_temp_allocator = temp_allocator<_Ty, temporary_sizes::medium_pool_size, _Alignment>;
 
 	template<typename _Ty, size_t _Alignment = alignof(std::max_align_t)>
-	using huge_temp_allocator_t = temp_allocator<_Ty, temporary_sizes::huge_pool_size, _Alignment>;
+	using huge_temp_allocator = temp_allocator<_Ty, temporary_sizes::huge_pool_size, _Alignment>;
+
+
+	template<typename _Ty, size_t _Count, size_t _Alignment = alignof(std::max_align_t)>
+	class pool_allocator
+	{
+	public:
+
+	};
 }
+
+// Specialization of allocator_traits for temp_allocator
+template<typename _Ty, size_t _Size, size_t _Alignment>
+struct std::allocator_traits<utl::temp_allocator<_Ty, _Size, _Alignment>>
+{
+	using allocator_type = utl::temp_allocator<_Ty, _Size, _Alignment>;
+	using value_type = typename allocator_type::value_type;
+	using pointer = value_type*;
+	using const_pointer = const value_type*;
+	using void_pointer = void*;
+	using const_void_pointer = const void*;
+	using size_type = typename allocator_type::size_type;
+	using difference_type = typename allocator_type::difference_type;
+
+	template<typename _Other>
+	using rebind_alloc = utl::temp_allocator<_Other, _Size, _Alignment>;
+
+	static pointer allocate(allocator_type& a, size_type n)
+	{
+		return a.allocate(n);
+	}
+
+	static void deallocate(allocator_type& a, pointer p, size_type n)
+	{
+		a.deallocate(p, n);
+	}
+
+	template<typename _Ty, typename... Args>
+	static void construct(allocator_type& a, _Ty* p, Args&&... args)
+	{
+		::new (static_cast<void*>(p)) _Ty(std::forward<Args>(args)...);
+	}
+
+	template<typename _Ty>
+	static void destroy(allocator_type& a, _Ty* p)
+	{
+		p->~_Ty();
+	}
+
+	static size_type max_size(const allocator_type& a) noexcept
+	{
+		return std::numeric_limits<size_type>::max() / sizeof(value_type);
+	}
+
+	static allocator_type select_on_container_copy_construction(const allocator_type& rhs)
+	{
+		return rhs;
+	}
+};
