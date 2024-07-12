@@ -148,6 +148,54 @@ namespace utl
 		constexpr const size_t huge_pool_size{ 2048 };
 	}
 
+	template<size_t _Size, size_t _Alignment = alignof(std::max_align_t)>
+	class ring_memory_pool
+	{
+	public:
+		constexpr ring_memory_pool()
+			: head_(0ull), tail_(0ull) {}
+
+		[[nodiscard]] constexpr void* allocate(std::size_t size)
+		{
+			size = aligned_size(size, _Alignment);
+			std::size_t current_tail = tail_.load(std::memory_order_relaxed);
+			std::size_t next_tail = (current_tail + size) % _Size;
+
+			if (next_tail == head_.load(std::memory_order_acquire))
+			{
+				// Buffer is full
+				return nullptr;
+			}
+
+			void* ptr = buffer_.get_raw_memory_view().get(current_tail);
+			tail_.store(next_tail, std::memory_order_release);
+			return ptr;
+		}
+
+		constexpr void deallocate(void* ptr, std::size_t size)
+		{
+			// In a lock-free ring buffer, deallocation is typically a no-op,
+			// as we only move the head and tail pointers. However, we can implement
+			// a safety check if needed. The below code does not deallocate memory
+			// but shows how you might move the head if necessary.
+
+			size = aligned_size(size, _Alignment);
+			std::size_t current_head = head_.load(std::memory_order_relaxed);
+
+			// Optional: Add safety checks if needed
+			// if (ptr != buffer_.get_raw_memory_view().data() + current_head) {
+			//     throw std::runtime_error("Invalid deallocation");
+			// }
+
+			head_.store((current_head + size) % _Size, std::memory_order_release);
+		}
+
+	private:
+		std::atomic<std::size_t> head_;
+		std::atomic<std::size_t> tail_;
+		small_buffer<_Size, _Alignment> buffer_;
+	};
+
 	template<size_t _InitialSize, size_t _Alignment = alignof(std::max_align_t)>
 	class memory_pool
 	{
@@ -276,52 +324,11 @@ namespace utl
 		free_block* free_list_{ nullptr };
 	};
 
-	template<size_t _Size, size_t _Alignment = alignof(std::max_align_t)>
-	class ring_memory_pool
+	template<typename _Ty, size_t _Count, size_t _Alignment = alignof(std::max_align_t)>
+	class pool_allocator
 	{
 	public:
-		constexpr ring_memory_pool()
-			: head_(0ull), tail_(0ull) {}
 
-		[[nodiscard]] constexpr void* allocate(std::size_t size)
-		{
-			size = aligned_size(size, _Alignment);
-			std::size_t current_tail = tail_.load(std::memory_order_relaxed);
-			std::size_t next_tail = (current_tail + size) % _Size;
-
-			if (next_tail == head_.load(std::memory_order_acquire))
-			{
-				// Buffer is full
-				return nullptr;
-			}
-
-			void* ptr = buffer_.get_raw_memory_view().get(current_tail);
-			tail_.store(next_tail, std::memory_order_release);
-			return ptr;
-		}
-
-		constexpr void deallocate(void* ptr, std::size_t size)
-		{
-			// In a lock-free ring buffer, deallocation is typically a no-op,
-			// as we only move the head and tail pointers. However, we can implement
-			// a safety check if needed. The below code does not deallocate memory
-			// but shows how you might move the head if necessary.
-
-			size = aligned_size(size, _Alignment);
-			std::size_t current_head = head_.load(std::memory_order_relaxed);
-
-			// Optional: Add safety checks if needed
-			// if (ptr != buffer_.get_raw_memory_view().data() + current_head) {
-			//     throw std::runtime_error("Invalid deallocation");
-			// }
-
-			head_.store((current_head + size) % _Size, std::memory_order_release);
-		}
-		
-	private:
-		std::atomic<std::size_t> head_;
-		std::atomic<std::size_t> tail_;
-		small_buffer<_Size, _Alignment> buffer_;
 	};
 
 	template<size_t _Alignment = alignof(std::max_align_t)>
@@ -405,14 +412,6 @@ namespace utl
 
 	template<typename _Ty, size_t _Alignment = alignof(std::max_align_t)>
 	using huge_temp_allocator = temp_allocator<_Ty, temporary_sizes::huge_pool_size, _Alignment>;
-
-
-	template<typename _Ty, size_t _Count, size_t _Alignment = alignof(std::max_align_t)>
-	class pool_allocator
-	{
-	public:
-
-	};
 }
 
 // Specialization of allocator_traits for temp_allocator
