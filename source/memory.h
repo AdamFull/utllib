@@ -154,6 +154,7 @@ namespace utl
 	public:
 		struct free_block;
 		{
+			std::size_t size{};
 			free_block* next{ nullptr };
 		};
 
@@ -170,31 +171,106 @@ namespace utl
 		{
 			std::size_t allocation_size = aligned_size(count * size, _Alignment);
 
+			free_block* prev = nullptr;
+			free_block* curr = free_list_;
+
+			// Looking for free blocks
+			while (current)
+			{
+				if (current->size >= allocation_size)
+				{
+					if (current->size > allocation_size + sizeof(free_block))
+					{
+						free_block* new_block = reinterpret_cast<free_block*>(ptr_offset(current, allocation_size));
+						new_block->size = current->size - allocation_size - sizeof(free_block);
+						new_block->next = current->next;
+						current->next = new_block;
+					}
+
+					if (prev)
+						prev->next = current->next;
+					else
+						free_list_ = current->next;
+
+					current->size = allocation_size;
+					return ptr_offset(current, sizeof(free_block));
+				}
+				prev = current;
+				current = current->next;
+			}
+
+			grow(allocation_size);
+			return allocate(count, size);
 		}
 
 		inline void* deallocate(void* ptr, std::size_t count, std::size_t size)
 		{
+			std::size_t allocation_size = aligned_size(count * size, _Alignment);
 
-		}
-	protected:
-		inline std::size_t get_size_remain()
-		{
-			// free_block size should be already aligned. Not need to align it again
-			return ptr_distance(free_list_, buffer_.get_raw_memory_view().end()) + sizeof(free_block);
-		}
+			free_block* block = reinterpret_cast<free_block*>(ptr_offset(ptr, -static_cast<ptrdiff_t>(sizeof(free_block))));
+			block->size = allocation_size;
 
-		free_block* lookup_free_block()
-		{
+			free_block* current = free_list_;
 			free_block* prev = nullptr;
-			free_block* curr = free_list_;
 
-			while (curr)
+			while (current && current < block) 
 			{
-
+				prev = current;
+				current = current->next;
 			}
 
-			return nullptr;
+			block->next = current;
+
+			if (prev)
+				prev->next = block;
+			else
+				free_list_ = block;
+
+			merge_blocks();
 		}
+	protected:
+		void grow(std::size_t required_size)
+		{
+			std::size_t current_size = buffer_.size();
+			std::size_t new_size = current_size * 2ull;
+
+			while (new_size < required_size + sizeof(free_block))
+				new_size *= 2ull;
+
+			buffer_.resize(new_size, _Alignment);
+
+			free_block* new_block = buffer_.get_raw_memory_view().as<free_block>(current_size);
+			new_block->size = new_size - current_size - sizeof(free_block);
+			new_block->next = nullptr;
+
+			free_block* current = free_list_;
+			while (current && current->next)
+				current = current->next;
+
+			if (current)
+				current->next = new_block;
+			else
+				free_list_ = new_block;
+
+			merge_blocks();
+		}
+
+		void merge_blocks() 
+		{
+			free_block* current = free_list_;
+
+			while (current && current->next) 
+			{
+				if (ptr_offset(current, current->size + sizeof(free_block)) == current->next) 
+				{
+					current->size += current->next->size + sizeof(free_block);
+					current->next = current->next->next;
+				}
+				else
+					current = current->next;
+			}
+		}
+
 	private:
 		buffer buffer_{ _InitialSize, _Alignment };
 		free_block* free_list_{ nullptr };
