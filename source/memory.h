@@ -141,12 +141,15 @@ namespace utl
 		alignas(_Alignment) uint8_t memory[_Size];
 	};
 
-	namespace temporary_sizes
+
+	// Memory allocator concept
+	template <typename _Pool>
+	concept memory_pool = requires(_Pool pool, std::size_t count, std::size_t size, void* ptr) 
 	{
-		constexpr const size_t small_pool_size{ 256 };
-		constexpr const size_t medium_pool_size{ 1024 };
-		constexpr const size_t huge_pool_size{ 2048 };
-	}
+		{ pool.allocate(count, size) } -> std::same_as<void*>;
+		{ pool.deallocate(ptr, count, size) };
+		{ pool.max_size() } -> std::same_as<std::size_t>;
+	};
 
 	template<size_t _Size, size_t _Alignment = alignof(std::max_align_t)>
 	class ring_memory_pool
@@ -155,11 +158,11 @@ namespace utl
 		constexpr ring_memory_pool()
 			: head_(0ull), tail_(0ull) {}
 
-		[[nodiscard]] constexpr void* allocate(std::size_t size)
+		[[nodiscard]] inline constexpr void* allocate(std::size_t count, std::size_t size)
 		{
-			size = aligned_size(size, _Alignment);
+			std::size_t allocation_size = aligned_size(count * size, _Alignment);
 			std::size_t current_tail = tail_.load(std::memory_order_relaxed);
-			std::size_t next_tail = (current_tail + size) % _Size;
+			std::size_t next_tail = (current_tail + allocation_size) % _Size;
 
 			if (next_tail == head_.load(std::memory_order_acquire))
 			{
@@ -172,14 +175,14 @@ namespace utl
 			return ptr;
 		}
 
-		constexpr void deallocate(void* ptr, std::size_t size)
+		constexpr void deallocate(void* ptr, std::size_t count, std::size_t size)
 		{
 			// In a lock-free ring buffer, deallocation is typically a no-op,
 			// as we only move the head and tail pointers. However, we can implement
 			// a safety check if needed. The below code does not deallocate memory
 			// but shows how you might move the head if necessary.
 
-			size = aligned_size(size, _Alignment);
+			std::size_t allocation_size = aligned_size(count * size, _Alignment);
 			std::size_t current_head = head_.load(std::memory_order_relaxed);
 
 			// Optional: Add safety checks if needed
@@ -187,7 +190,12 @@ namespace utl
 			//     throw std::runtime_error("Invalid deallocation");
 			// }
 
-			head_.store((current_head + size) % _Size, std::memory_order_release);
+			head_.store((current_head + allocation_size) % _Size, std::memory_order_release);
+		}
+
+		inline constexpr std::size_t max_size() const
+		{
+			return buffer_.size();
 		}
 
 	private:
@@ -197,7 +205,7 @@ namespace utl
 	};
 
 	template<size_t _InitialSize, size_t _Alignment = alignof(std::max_align_t)>
-	class memory_pool
+	class dynamic_memory_pool
 	{
 	public:
 		struct free_block;
@@ -206,7 +214,7 @@ namespace utl
 			free_block* next{ nullptr };
 		};
 
-		constexpr memory_pool() throw()
+		constexpr dynamic_memory_pool() throw()
 		{
 			auto mem_view = buffer_.get_raw_memory_view();
 
@@ -276,6 +284,11 @@ namespace utl
 
 			merge_blocks();
 		}
+
+		inline constexpr std::size_t max_size() const
+		{
+			return buffer_.size();
+		}
 	protected:
 		void grow(std::size_t required_size)
 		{
@@ -324,22 +337,8 @@ namespace utl
 		free_block* free_list_{ nullptr };
 	};
 
-	template<typename _Ty, size_t _Count, size_t _Alignment = alignof(std::max_align_t)>
-	class pool_allocator
-	{
-	public:
-
-	};
-
-	template<size_t _Alignment = alignof(std::max_align_t)>
-	using small_temp_pool = ring_memory_pool<temporary_sizes::small_pool_size, _Alignment>;
-	template<size_t _Alignment = alignof(std::max_align_t)>
-	using medium_temp_pool = ring_memory_pool<temporary_sizes::medium_pool_size, _Alignment>;
-	template<size_t _Alignment = alignof(std::max_align_t)>
-	using huge_temp_pool = ring_memory_pool<temporary_sizes::huge_pool_size, _Alignment>;
-
-	template<typename _Ty, size_t _Size, size_t _Alignment = alignof(std::max_align_t)>
-	class temp_allocator
+	template<typename _Ty, memory_pool _Pool>
+	class allocator
 	{
 	public:
 		using value_type = _Ty;
@@ -349,18 +348,17 @@ namespace utl
 		template<typename _Other>
 		struct rebind 
 		{
-			using other = temp_allocator<_Other, _Size, _Alignment>;
+			using other = allocator<_Other, _Pool>;
 		};
 
-		constexpr temp_allocator(ring_memory_pool<_Size, _Alignment>& buffer) noexcept : buffer_(buffer) {}
+		constexpr allocator(_Pool& pool) noexcept : pool_(pool) {}
 
 		template<typename _Other>
-		constexpr temp_allocator(const temp_allocator<_Other, _Size, _Alignment>& other) noexcept : buffer_(other.buffer_) {}
+		constexpr allocator(const allocator<_Other, _Pool>& other) noexcept : buffer_(other.buffer_) {}
 
 		[[nodiscard]] constexpr _Ty* allocate(std::size_t n)
 		{
-			std::size_t size = aligned_size(n * sizeof(_Ty), _Alignment);
-			void* ptr = buffer_.allocate(size);
+			void* ptr = pool_.allocate(n, sizeof(_Ty));
 			if (!ptr)
 				throw std::bad_alloc();
 
@@ -369,8 +367,7 @@ namespace utl
 
 		constexpr void deallocate(_Ty* p, std::size_t n)
 		{
-			std::size_t size = aligned_size(n * sizeof(_Ty), _Alignment);
-			buffer_.deallocate(p, size);
+			pool_.deallocate(p, n, sizeof(_Ty));
 		}
 
 		template<typename... _Args>
@@ -386,39 +383,32 @@ namespace utl
 				p->~_Ty();
 		}
 
-		inline size_type max_size() const throw() { return _Size / sizeof(_Ty); }
+		inline size_type max_size() const throw() { return pool_.max_size() / sizeof(_Ty); }
 
-		bool operator==(const temp_allocator& rhs) const noexcept
+		template <typename U>
+		bool operator==(const allocator<U, _Pool>& other) const noexcept
 		{
-			return &buffer_ == &rhs.buffer_;
+			return &pool_ == &other.pool_;
 		}
 
-		bool operator!=(const temp_allocator& rhs) const noexcept
+		template <typename U>
+		bool operator!=(const allocator<U, _Pool>& other) const noexcept 
 		{
-			return !(*this == rhs);
+			return !(*this == other);
 		}
 	private:
-		template<typename _Other, size_t _OtherSize, size_t _OtherAlignment>
-		friend class temp_allocator;
+		template<typename _Other, memory_pool _Pool>
+		friend class allocator;
 
-		ring_memory_pool<_Size, _Alignment>& buffer_;
+		_Pool& pool_;
 	};
-
-	template<typename _Ty, size_t _Alignment = alignof(std::max_align_t)>
-	using small_temp_allocator = temp_allocator<_Ty, temporary_sizes::small_pool_size, _Alignment>;
-
-	template<typename _Ty, size_t _Alignment = alignof(std::max_align_t)>
-	using medium_temp_allocator = temp_allocator<_Ty, temporary_sizes::medium_pool_size, _Alignment>;
-
-	template<typename _Ty, size_t _Alignment = alignof(std::max_align_t)>
-	using huge_temp_allocator = temp_allocator<_Ty, temporary_sizes::huge_pool_size, _Alignment>;
 }
 
-// Specialization of allocator_traits for temp_allocator
-template<typename _Ty, size_t _Size, size_t _Alignment>
-struct std::allocator_traits<utl::temp_allocator<_Ty, _Size, _Alignment>>
+// Specialization of allocator_traits for allocator
+template<typename _Ty, utl::memory_pool _Pool>
+struct std::allocator_traits<utl::allocator<_Ty, _Pool>>
 {
-	using allocator_type = utl::temp_allocator<_Ty, _Size, _Alignment>;
+	using allocator_type = utl::allocator<_Ty, _Pool>;
 	using value_type = typename allocator_type::value_type;
 	using pointer = value_type*;
 	using const_pointer = const value_type*;
@@ -428,16 +418,16 @@ struct std::allocator_traits<utl::temp_allocator<_Ty, _Size, _Alignment>>
 	using difference_type = typename allocator_type::difference_type;
 
 	template<typename _Other>
-	using rebind_alloc = utl::temp_allocator<_Other, _Size, _Alignment>;
+	using rebind_alloc = utl::allocator<_Other, _Pool>;
 
 	static pointer allocate(allocator_type& a, size_type n)
 	{
-		return a.allocate(n);
+		return a.allocate(n, sizeof(_Ty));
 	}
 
 	static void deallocate(allocator_type& a, pointer p, size_type n)
 	{
-		a.deallocate(p, n);
+		a.deallocate(p, n, sizeof(_Ty));
 	}
 
 	template<typename _Ty, typename... Args>
