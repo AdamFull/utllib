@@ -208,7 +208,7 @@ namespace utl
 	class dynamic_memory_pool
 	{
 	public:
-		struct free_block;
+		struct free_block
 		{
 			std::size_t size{};
 			free_block* next{ nullptr };
@@ -354,7 +354,7 @@ namespace utl
 		constexpr allocator(_Pool& pool) noexcept : pool_(pool) {}
 
 		template<typename _Other>
-		constexpr allocator(const allocator<_Other, _Pool>& other) noexcept : buffer_(other.buffer_) {}
+		constexpr allocator(const allocator<_Other, _Pool>& other) noexcept : pool_(other.pool_) {}
 
 		[[nodiscard]] constexpr _Ty* allocate(std::size_t n)
 		{
