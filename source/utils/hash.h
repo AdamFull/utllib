@@ -76,7 +76,7 @@ namespace utl
 	}
 
 	/// Inverts a (h ^= h >> s) operation with 8 <= s <= 16
-	u32 invert_shift_xor(u32 hs, u32 s)
+	inline u32 invert_shift_xor(u32 hs, u32 s)
 	{
 		assert(s >= 8 && s <= 16);
 		u32 hs0 = hs >> 24;
@@ -91,7 +91,7 @@ namespace utl
 		return (h0 << 24) + (h1 << 16) + (h2 << 8) + h3;
 	}
 
-	u32 murmur_hash_inverse(u32 h, u32 seed)
+	inline u32 murmur_hash_inverse(u32 h, u32 seed)
 	{
 		const u32 m = 0x5bd1e995;
 		const u32 minv = 0xe59b19bd;	// Multiplicative inverse of m under % 2^32
