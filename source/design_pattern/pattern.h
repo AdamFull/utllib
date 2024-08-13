@@ -39,7 +39,7 @@ namespace utl
         class singleton : public non_copy_movable
         {
         public:
-            static inline const std::unique_ptr<_Ty>& getInstance()
+            static inline const std::unique_ptr<_Ty>& GetInstance()
             {
                 static std::unique_ptr<_Ty> _instance;
                 if (!_instance)
@@ -56,7 +56,7 @@ namespace utl
             virtual ~base_polymorphus() = default;
 
             template<class _Kty>
-            constexpr _Kty* as() noexcept
+            constexpr _Kty* As() noexcept
             {
                 if (is_same<_Kty>())
                     return cast<_Kty*>(this);
@@ -64,7 +64,7 @@ namespace utl
             }
 
             template<class _Kty>
-            constexpr bool is_same() noexcept
+            constexpr bool IsSame() noexcept
             {
                 return delivered == _Kty::self_hash;
             }
@@ -87,7 +87,7 @@ namespace utl
         {
         public:
             virtual ~observer() = default;
-            virtual void notification(const _Ty&) = 0;
+            virtual void Notification(const _Ty&) = 0;
         };
 
         template<class _Ty, class _Kty>
@@ -96,14 +96,14 @@ namespace utl
         public:
             virtual ~subject() = default;
 
-            virtual void attach(_Ty* _ptr) { vObservers.emplace_back(_ptr); }
+            virtual void Attach(_Ty* _ptr) { vObservers.emplace_back(_ptr); }
 
-            virtual void detach(_Ty* _ptr) { vObservers.remove(_ptr); }
+            virtual void Detach(_Ty* _ptr) { vObservers.remove(_ptr); }
 
-            virtual void notify()
+            virtual void Notify()
             {
                 for (auto& obs : vObservers)
-                    obs->notification(notificationData);
+                    obs->Notification(notificationData);
             }
 
         protected:
