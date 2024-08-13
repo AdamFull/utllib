@@ -228,7 +228,7 @@ namespace utl
 			std::size_t allocation_size = aligned_size(count * size, _Alignment);
 
 			free_block* prev = nullptr;
-			free_block* curr = free_list_;
+			free_block* current = free_list_;
 
 			// Looking for free blocks
 			while (current)
