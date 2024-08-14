@@ -5,6 +5,159 @@
 
 namespace utl
 {
+	// String conversion
+	template<typename _Ty, typename _Traits = std::char_traits<_Ty>, typename _Allocator = std::allocator<_Ty>>
+	inline std::string to_utf8(const std::basic_string<_Ty, _Traits, _Allocator>& str) {}
+
+	template<>
+	inline std::string to_utf8<wchar_t>(const std::wstring& str)
+	{
+		std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+		return converter.to_bytes(str);
+	}
+
+	template<>
+	inline std::string to_utf8<char16_t>(const std::u16string& str)
+	{
+		std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
+		return converter.to_bytes(str);
+	}
+
+	template<>
+	inline std::string to_utf8<char32_t>(const std::u32string& str)
+	{
+		std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
+		return converter.to_bytes(str);
+	}
+
+	template<typename _Ty, typename _Traits = std::char_traits<_Ty>, typename _Allocator = std::allocator<_Ty>>
+	inline std::basic_string<_Ty, _Traits, _Allocator> from_utf8(const std::string& str) {}
+
+	template<>
+	inline std::wstring from_utf8<wchar_t>(const std::string& str)
+	{
+		std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+		return converter.from_bytes(str);
+	}
+
+	template<>
+	inline std::u16string from_utf8<char16_t>(const std::string& str)
+	{
+		std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
+		return converter.from_bytes(str);
+	}
+
+	template<>
+	inline std::u32string from_utf8<char32_t>(const std::string& str)
+	{
+		std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
+		return converter.from_bytes(str);
+	}
+
+	namespace base64_detail
+	{
+		constexpr std::string_view base64_chars =
+			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+			"abcdefghijklmnopqrstuvwxyz"
+			"0123456789+/";
+	}
+
+	inline bool is_base64(unsigned char c) 
+	{
+		return (isalnum(c) || (c == '+') || (c == '/'));
+	}
+
+	inline std::string to_base64(const u8* data, size_t size)
+	{
+		std::string ret;
+		int i = 0;
+		int j = 0;
+		uint8_t char_array_3[3];
+		uint8_t char_array_4[4];
+
+		while (size--)
+		{
+			char_array_3[i++] = *(data++);
+			if (i == 3)
+			{
+				char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+				char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+				char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+				char_array_4[3] = char_array_3[2] & 0x3f;
+
+				for (i = 0; (i < 4); i++)
+					ret += base64_detail::base64_chars[char_array_4[i]];
+				i = 0;
+			}
+		}
+
+		if (i)
+		{
+			for (j = i; j < 3; j++)
+				char_array_3[j] = '\0';
+
+			char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+			char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+			char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+			char_array_4[3] = char_array_3[2] & 0x3f;
+
+			for (j = 0; (j < i + 1); j++)
+				ret += base64_detail::base64_chars[char_array_4[j]];
+
+			while ((i++ < 3))
+				ret += '=';
+		}
+
+		return ret;
+	}
+
+	inline utl::vector<u8> from_base64(const std::string& data)
+	{
+		int in_len = data.size();
+		int i = 0;
+		int j = 0;
+		int in_ = 0;
+		uint8_t char_array_4[4], char_array_3[3];
+		utl::vector<uint8_t> ret;
+
+		while (in_len-- && (data[in_] != '=') && is_base64(data[in_]))
+		{
+			char_array_4[i++] = data[in_];
+			in_++;
+			if (i == 4)
+			{
+				for (i = 0; i < 4; i++)
+					char_array_4[i] = base64_detail::base64_chars.find(char_array_4[i]);
+
+				char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+				char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+				char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
+
+				for (i = 0; (i < 3); i++)
+					ret.push_back(char_array_3[i]);
+				i = 0;
+			}
+		}
+
+		if (i)
+		{
+			for (j = i; j < 4; j++)
+				char_array_4[j] = 0;
+
+			for (j = 0; j < 4; j++)
+				char_array_4[j] = base64_detail::base64_chars.find(char_array_4[j]);
+
+			char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
+			char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
+			char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
+
+			for (j = 0; (j < i - 1); j++)
+				ret.push_back(char_array_3[j]);
+		}
+
+		return ret;
+	}
+
 	namespace impl
 	{
 		/// Base declaration of our constexpr string_view concatenation helper
@@ -159,4 +312,10 @@ namespace utl
 
 	using id_wstring32 = id_string<wchar_t, u32>;
 	using id_wstring64 = id_string<wchar_t, u64>;
+
+	using id_u16string32 = id_string<char16_t, u32>;
+	using id_u16string64 = id_string<char16_t, u64>;
+
+	using id_u32string32 = id_string<char32_t, u32>;
+	using id_u32string64 = id_string<char32_t, u64>;
 }
