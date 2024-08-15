@@ -1,5 +1,5 @@
 #include "plugin.h"
-#include <utils/hash.h>
+#include <hash.hpp>
 
 using namespace utl::plugin_system;
 

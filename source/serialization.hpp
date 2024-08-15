@@ -2,10 +2,45 @@
 
 #include <nlohmann/json.hpp>
 #include "string.hpp"
-#include <charconv>
+//#include <charconv>
 
 namespace utl
 {
+    // Wstrings serialization
+    void to_json(nlohmann::json& j, const std::wstring& wstr)
+    {
+        if (!wstr.empty())
+            j = to_utf8(wstr);
+    }
+
+    void from_json(const nlohmann::json& j, std::wstring& wstr)
+    {
+        wstr = from_utf8<wchar_t>(j.get<std::string>());
+    }
+
+    void to_json(nlohmann::json& j, const std::u16string& wstr)
+    {
+        if (!wstr.empty())
+            j = to_utf8(wstr);
+    }
+
+    void from_json(const nlohmann::json& j, std::u16string& wstr)
+    {
+        wstr = from_utf8<char16_t>(j.get<std::string>());
+    }
+
+    void to_json(nlohmann::json& j, const std::u32string& wstr)
+    {
+        if (!wstr.empty())
+            j = to_utf8(wstr);
+    }
+
+    void from_json(const nlohmann::json& j, std::u32string& wstr)
+    {
+        wstr = from_utf8<char32_t>(j.get<std::string>());
+    }
+
+    // id string serialization
     template<typename _HashType>
     void to_json(nlohmann::json& j, const id_string<char, _HashType>& idStr)
     {

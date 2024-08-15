@@ -1,6 +1,6 @@
 #include "plugin_manager.h"
 
-#include <utils/hash.h>
+#include <hash.hpp>
 
 using namespace utl::plugin_system;
 

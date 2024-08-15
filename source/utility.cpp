@@ -21,6 +21,5 @@
 
 #include "threading/threading.hpp"
 
-#include "utils/hash.h"
 #include "utils/stopwatch.h"
 #include "utils/uuid.h"

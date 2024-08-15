@@ -80,37 +80,37 @@ namespace utl
 	{
 		return (rhs << 8) | (lhs & 0xFF);
 	}
-
-	inline const void unpack_u32_16x2(u16 packed, u8& lhs, u8& rhs)
+	
+	inline const void unpack_u16_8x2(u16 packed, u8& lhs, u8& rhs)
 	{
 		rhs = cast<u8>(packed >> 8);
 		lhs = cast<u8>(packed & 0xFF);
 	}
-
+	
 	// U32 packing
 	constexpr inline const u32 pack_u32_16x2(u16 lhs, u16 rhs)
 	{
 		return (rhs << 16) | (lhs & 0xFFFF);
 	}
-
+	
 	inline const void unpack_u32_16x2(u32 packed, u16& lhs, u16& rhs)
 	{
 		rhs = cast<u16>(packed >> 16);
 		lhs = cast<u16>(packed & 0xFFFF);
 	}
-
-	constexpr inline const u32 pack_u32_8x4(u8 l0, u8 l1, u8 r0, u8 r1)
-	{
-		return (l0 << 24) + (l1 << 16) + (r0 << 8) + r1;
-	}
-
-	inline const void unpack_u32_8x4(u32 packed, u8& l0, u8& l1, u8& r0, u8& r1)
-	{
-		l0 = (packed & 0xff000000) >> 24;
-		l1 = (packed & 0x00ff0000) >> 16;
-		r0 = (packed & 0x0000ff00) >> 8;
-		r1 = (packed & 0x000000ff);
-	}
+	
+	//constexpr inline const u32 pack_u32_8x4(u8 l0, u8 l1, u8 r0, u8 r1)
+	//{
+	//	return (l0 << 24) + (l1 << 16) + (r0 << 8) + r1;
+	//}
+	//
+	//inline const void unpack_u32_8x4(u32 packed, u8& l0, u8& l1, u8& r0, u8& r1)
+	//{
+	//	l0 = (packed & 0xff000000) >> 24;
+	//	l1 = (packed & 0x00ff0000) >> 16;
+	//	r0 = (packed & 0x0000ff00) >> 8;
+	//	r1 = (packed & 0x000000ff);
+	//}
 
 	// U64 packing
 	//constexpr inline const u64 pack_u64_8x8(u8 l0, u8 l1, u8 l2, u8 l3, u8 r0, u8 r1, u8 r2, u8 r3)
@@ -184,68 +184,6 @@ namespace utl
 			ptr = nullptr;
 		}
 	}
-
-	constexpr inline u32 fnv1a_32_hash(const char* str, u32 len, u32 hash = 2166136261u) noexcept
-	{
-		for(u32 idx = 0u; idx < len; ++idx)
-			hash = (hash ^ cast<u32>(str[idx])) * 16777619u;
-		return hash;
-	}
-
-	constexpr inline u64 fnv1a_64_hash(const char* str, u64 len, u64 hash = 14695981039346656037ull) noexcept
-	{
-		for (u64 idx = 0ull; idx < len; ++idx)
-			hash = (hash ^ cast<u64>(str[idx])) * 1099511628211ull;
-		return hash;
-	}
-
-	inline constexpr u32 fnv1a_32_hash_cstr(const char* str, u32 hash = 2166136261u) noexcept
-	{
-		while (*str != '\0')
-		{
-			hash = (hash ^ cast<u32>(*str)) * 16777619u;
-			str++;
-		}
-		return hash;
-	}
-	
-	inline constexpr uint64_t fnv1a_64_hash_cstr(const char* str, u64 hash = 14695981039346656037ull) noexcept
-	{
-		while (*str != '\0')
-		{
-			hash = (hash ^ cast<u64>(*str)) * 1099511628211ull;
-			str++;
-		}
-		return hash;
-	}
-
-
-	template<class _Ty>
-	struct hash 
-	{
-		u64 operator()(const _Ty& data) const
-		{
-			return fnv1a_64_hash(reinterpret_cast<const char*>(&data), sizeof(_Ty));
-		}
-	};
-
-	template<>
-	struct hash<std::string>
-	{
-		u64 operator()(const std::string& data) const
-		{
-			return fnv1a_64_hash(data.c_str(), data.size());
-		}
-	};
-
-	//template<>
-	//struct hash<std::basic_string<char, std::char_traits<char>, std::allocator<char>>>
-	//{
-	//	u64 operator()(const std::basic_string<char, std::char_traits<char>, std::allocator<char>>& data) const
-	//	{
-	//		return fnv1a_64_hash(data.c_str(), data.size());
-	//	}
-	//};
 
 	template<class _Kty, class _Ty,
 		class _Hasher = std::hash<_Kty>,
