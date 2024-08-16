@@ -99,7 +99,7 @@ namespace utl
 		// len%4 is the size of the tail and 
 		// 	(tail_start + i)
 		// returns the i:th tail byte.
-		const unsigned tail_start = len - (len % 4);
+		const u32 tail_start = len - (len % 4);
 		switch (len & 3) {
 		case 3: k1 ^= key[tail_start + 2] << 16;
 		case 2: k1 ^= key[tail_start + 1] << 8;
@@ -116,6 +116,17 @@ namespace utl
 		h1 = murmur32::fmix32(h1);
 
 		return h1;
+	}
+
+	inline constexpr u32 murmur_hash(const char* str, u32 seed = 0u)
+	{
+		return murmur_hash(str, strlen(str), seed);
+	}
+
+	template<typename _Ty, typename _Traits = std::char_traits<_Ty>, typename _Allocator = std::allocator<_Ty>>
+	inline u32 murmur_hash(const std::basic_string<_Ty, _Traits, _Allocator>& str, u32 seed = 0u)
+	{
+		return murmur_hash(str.c_str(), str.size(), seed);
 	}
 
 	namespace murmur64
@@ -151,73 +162,55 @@ namespace utl
 		}
 	}
 
-	inline constexpr u64 murmur_hash_64(const char* key, i32 len, u64 seed) noexcept
+	inline constexpr u64 murmur_hash_64(const char* key, u64 len, u64 seed) noexcept
 	{
-		constexpr const uint64_t c1 = 0x87c37b91114253d5ull;
-		constexpr const uint64_t c2 = 0x4cf5ad432745937full;
+		constexpr const u64 m = 0xc6a4a7935bd1e995ULL;
+		constexpr const i32 r = 47;
 
-		const int nblocks = len / 16;
+		const u64 nblocks = len / 8ull;
 
-		uint64_t h1 = seed;
+		u64 h = seed ^ (len * m);
 
-		for (int i = 0; i < nblocks; i++)
+		for (i64 i = 0; i < nblocks; ++i)
 		{
-			uint64_t k1 = murmur64::block(key, i * 2 + 0);
-			uint64_t k2 = murmur64::block(key, i * 2 + 1);
+#ifdef PLATFORM_BIG_ENDIAN
+			uint64 k = *data++;
+			char* p = (char*)&k;
+			char c;
+			c = p[0]; p[0] = p[7]; p[7] = c;
+			c = p[1]; p[1] = p[6]; p[6] = c;
+			c = p[2]; p[2] = p[5]; p[5] = c;
+			c = p[3]; p[3] = p[4]; p[4] = c;
+#else
+			u64 k = murmur64::block(key, i);
+#endif
 
-			k1 *= c1; 
-			k1 = murmur64::rotl64(k1, 31); 
-			k1 *= c2; 
+			k *= m;
+			k ^= k >> r;
+			k *= m;
 
-			h1 ^= k1;
-			h1 = murmur64::rotl64(h1, 27); 
-			h1 = h1 * 5 + 0x52dce729;
-
-			k2 *= c2; 
-			k2 = murmur64::rotl64(k2, 33); 
-			k2 *= c1; 
-
-			h1 ^= k2;
-			h1 = murmur64::rotl64(h1, 31); 
-			h1 = h1 * 5 + 0x38495ab5;
+			h ^= k;
+			h *= m;
 		}
 
-		uint64_t k1 = 0;
-		uint64_t k2 = 0;
-
-		const unsigned tail_start = len - (len % 16);
-		const char* tail = key + tail_start;
-
-		switch (len & 15)
+		const u64 tail_start = len - (len % 4);
+		switch (len & 7)
 		{
-		case 15: k2 ^= static_cast<uint64_t>(tail[14]) << 48;
-		case 14: k2 ^= static_cast<uint64_t>(tail[13]) << 40;
-		case 13: k2 ^= static_cast<uint64_t>(tail[12]) << 32;
-		case 12: k2 ^= static_cast<uint64_t>(tail[11]) << 24;
-		case 11: k2 ^= static_cast<uint64_t>(tail[10]) << 16;
-		case 10: k2 ^= static_cast<uint64_t>(tail[9]) << 8;
-		case  9: k2 ^= static_cast<uint64_t>(tail[8]) << 0;
-			k2 *= c2; k2 = murmur64::rotl64(k2, 33); k2 *= c1; h1 ^= k2;
-
-		case  8: k1 ^= static_cast<uint64_t>(tail[7]) << 56;
-		case  7: k1 ^= static_cast<uint64_t>(tail[6]) << 48;
-		case  6: k1 ^= static_cast<uint64_t>(tail[5]) << 40;
-		case  5: k1 ^= static_cast<uint64_t>(tail[4]) << 32;
-		case  4: k1 ^= static_cast<uint64_t>(tail[3]) << 24;
-		case  3: k1 ^= static_cast<uint64_t>(tail[2]) << 16;
-		case  2: k1 ^= static_cast<uint64_t>(tail[1]) << 8;
-		case  1: k1 ^= static_cast<uint64_t>(tail[0]) << 0;
-			k1 *= c1; k1 = murmur64::rotl64(k1, 31); k1 *= c2; h1 ^= k1;
+		case 7: h ^= u64(key[tail_start + 6]) << 48;
+		case 6: h ^= u64(key[tail_start + 5]) << 40;
+		case 5: h ^= u64(key[tail_start + 4]) << 32;
+		case 4: h ^= u64(key[tail_start + 3]) << 24;
+		case 3: h ^= u64(key[tail_start + 2]) << 16;
+		case 2: h ^= u64(key[tail_start + 1]) << 8;
+		case 1: h ^= u64(key[tail_start + 0]);
+			h *= m;
 		};
 
-		//----------
-		// finalization
+		h ^= h >> r;
+		h *= m;
+		h ^= h >> r;
 
-		h1 ^= len;
-
-		h1 = murmur64::fmix64(h1);
-
-		return h1;
+		return h;
 	}
 
 	inline constexpr u32 operator "" _fnv1a32(char const* s, size_t count) noexcept
@@ -230,12 +223,12 @@ namespace utl
 		return fnv1a_64_hash(s, count);
 	}
 
-	inline constexpr u32 operator "" _mr32(char const* s, size_t count) noexcept
+	inline constexpr u32 operator "" _hash32(char const* s, size_t count) noexcept
 	{
 		return murmur_hash(s, count, 0);
 	}
 
-	inline constexpr u32 operator "" _mr64(char const* s, size_t count) noexcept
+	inline constexpr u32 operator "" _hash64(char const* s, size_t count) noexcept
 	{
 		return murmur_hash_64(s, count, 0);
 	}
