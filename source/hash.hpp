@@ -213,6 +213,17 @@ namespace utl
 		return h;
 	}
 
+	inline constexpr u64 murmur_hash_64(const char* str, u64 seed = 0ull)
+	{
+		return murmur_hash_64(str, strlen(str), seed);
+	}
+
+	template<typename _Ty, typename _Traits = std::char_traits<_Ty>, typename _Allocator = std::allocator<_Ty>>
+	inline u64 murmur_hash_64(const std::basic_string<_Ty, _Traits, _Allocator>& str, u64 seed = 0ull)
+	{
+		return murmur_hash_64(str.c_str(), str.size(), seed);
+	}
+
 	inline constexpr u32 operator "" _fnv1a32(char const* s, size_t count) noexcept
 	{
 		return fnv1a_32_hash(s, count);
@@ -258,7 +269,7 @@ namespace utl
 	//{
 	//	u64 operator()(const std::basic_string<char, std::char_traits<char>, std::allocator<char>>& data) const
 	//	{
-	//		return fnv1a_64_hash(data.c_str(), data.size());
+	//		return murmur_hash_64(data);
 	//	}
 	//};
 }
