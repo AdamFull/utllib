@@ -264,12 +264,12 @@ namespace utl
 		}
 	};
 
-	//template<>
-	//struct hash<std::basic_string<char, std::char_traits<char>, std::allocator<char>>>
-	//{
-	//	u64 operator()(const std::basic_string<char, std::char_traits<char>, std::allocator<char>>& data) const
-	//	{
-	//		return murmur_hash_64(data);
-	//	}
-	//};
+
+	// slot map impl
+	template<typename _Ty, typename _HashType>
+	class slot_map
+	{
+	public:
+	private:
+	};
 }
