@@ -154,37 +154,6 @@ namespace utl
 	//	rhs = (packed & 0x00000000ffffffffull);
 	//}
 
-	template<class _Ty>
-	inline void release_ptr(const std::allocator<_Ty>& alloc, _Ty*& ptr, size_t count = 1ull)
-	{
-		if (ptr)
-		{
-			alloc.destroy(ptr);
-			alloc.deallocate(ptr, count);
-			ptr = nullptr;
-		}
-	}
-
-	template<class _Ty>
-	inline void release_ptr(_Ty*& ptr)
-	{
-		if (ptr)
-		{
-			delete ptr;
-			ptr = nullptr;
-		}
-	}
-
-	template<class _Ty>
-	inline void release_arr(_Ty*& ptr)
-	{
-		if (ptr)
-		{
-			delete[] ptr;
-			ptr = nullptr;
-		}
-	}
-
 	template<class _Kty, class _Ty,
 		class _Hasher = std::hash<_Kty>,
 		class _Keyeq = std::equal_to<_Kty>,

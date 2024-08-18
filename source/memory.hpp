@@ -1,11 +1,6 @@
 #pragma once
 
-#include <atomic>
-#include <initializer_list>
-#include <cstddef>
-#include <cassert>
-#include <memory>
-#include <new>
+#include <standart_library.h>
 
 namespace utl
 {
@@ -30,10 +25,42 @@ namespace utl
 		return (const char*)end - (const char*)start;
 	}
 
-	constexpr std::size_t aligned_size(std::size_t size, std::size_t alignment) 
+	inline constexpr std::size_t aligned_size(std::size_t size, std::size_t alignment) 
 	{
 		return (size + alignment - 1) & ~(alignment - 1);
 	}
+
+	template<class _Ty>
+	inline void release_ptr(const std::allocator<_Ty>& alloc, _Ty*& ptr, size_t count = 1ull)
+	{
+		if (ptr)
+		{
+			alloc.destroy(ptr);
+			alloc.deallocate(ptr, count);
+			ptr = nullptr;
+		}
+	}
+
+	template<class _Ty>
+	inline void release_ptr(_Ty*& ptr)
+	{
+		if (ptr)
+		{
+			delete ptr;
+			ptr = nullptr;
+		}
+	}
+
+	template<class _Ty>
+	inline void release_arr(_Ty*& ptr)
+	{
+		if (ptr)
+		{
+			delete[] ptr;
+			ptr = nullptr;
+		}
+	}
+
 	
 	class raw_memory_view
 	{

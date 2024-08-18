@@ -10,7 +10,6 @@ add_subdirectory(parsing)
 add_subdirectory(plugin)
 add_subdirectory(reactive)
 add_subdirectory(threading)
-add_subdirectory(utils)
 
 file(GLOB UTILITY_LIB_SOURCES *.cpp)
 
@@ -26,5 +25,4 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE utility_plugin
     PRIVATE utility_reactive
     PRIVATE utility_threading
-    PRIVATE utility_utils
 )
