@@ -219,7 +219,7 @@ namespace utl
 		using value_type = std::basic_string<_Ty, std::char_traits<_Ty>, std::allocator<_Ty>>;
 		using hash_type = _HashType;
 
-		id_string() : _hash(0) {}
+		id_string() noexcept : _hash(0) {}
 
 		id_string(const value_type& str)
 			: _hash(compute_hash(str))
@@ -259,7 +259,7 @@ namespace utl
 			return nullptr;
 		}
 
-		const value_type str() const
+		const value_type& str() const
 		{
 			static value_type empty{ "" };
 
@@ -318,4 +318,69 @@ namespace utl
 
 	using id_u32string32 = id_string<char32_t, u32>;
 	using id_u32string64 = id_string<char32_t, u64>;
+
+	template<typename _Ty, typename _HashType>
+	class id_string_view
+	{
+	public:
+		using value_type = std::basic_string_view<_Ty>;
+		using hash_type = _HashType;
+
+		constexpr id_string_view() noexcept : _hash(0) {}
+
+		constexpr id_string_view(value_type str)
+			: _hash(compute_hash(str))
+		{
+			_string = str;
+		}
+
+		constexpr id_string_view(const _Ty* str)
+			: _hash(compute_hash(str))
+		{
+			_string = value_type(str);
+		}
+
+		constexpr id_string_view& operator=(const id_string_view& other)
+		{
+			if (this != &other && _hash != other._hash && _hash != 0)
+			{
+				_hash = other._hash;
+				_string = other._string;
+			}
+			return *this;
+		}
+
+		id_string_view& operator=(const id_string<_Ty, _HashType>& other) 
+		{
+			if (this != &other && _hash != other._hash && _hash != 0)
+			{
+				_hash = other._hash;
+				_string = other.c_str();
+			}
+			return *this;
+		}
+
+		inline constexpr const _Ty* c_str() noexcept const
+		{
+			return _string.data();
+		}
+
+		inline constexpr const value_type str() noexcept const
+		{
+			return _string;
+		}
+
+		inline constexpr hash_type hash() noexcept const
+		{
+			return _hash;
+		}
+
+		inline constexpr bool valid() noexcept const
+		{
+			return _hash != 0;
+		}
+	private:
+		hash_type _hash;
+		value_type _string;
+	};
 }
