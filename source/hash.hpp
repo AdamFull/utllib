@@ -103,6 +103,12 @@ namespace utl
 		return murmur_hash(str.c_str(), str.size(), seed);
 	}
 
+	template<typename _Ty>
+	inline u32 murmur_hash(const _Ty& value, u32 seed = 0u)
+	{
+		return murmur_hash(reinterpret_cast<const char*>(&value), sizeof(_Ty), seed);
+	}
+
 	namespace murmur64
 	{
 		inline constexpr u64 block(const char* p, u64 i)
@@ -263,6 +269,22 @@ namespace utl
 			return murmur_hash_64(reinterpret_cast<const char*>(data.c_str()), data.size() * sizeof(_Ty), 0ull);
 		}
 	};
+
+	//inline void hash_combine32(uint32_t& seed, uint32_t v)
+	//{
+	//	seed ^= v + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+	//}
+	//
+	//inline void hash_combine64(uint64_t& seed, uint64_t v)
+	//{
+	//	seed ^= v + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+	//}
+	//
+	//template<typename _Ty>
+	//inline void hash_combine32(uint32_t& seed, const _Ty& v)
+	//{
+	//	seed ^= murmur_hash(static_cast<const char*>(&v), sizeof(_Ty)) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+	//}
 
 
 	// slot map impl
