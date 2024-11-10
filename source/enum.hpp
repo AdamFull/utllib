@@ -129,6 +129,64 @@ namespace utl
 		MaskType m_mask;
 	};
 
+	template<typename BitType>
+	inline flags<BitType> and_(flags<BitType> l, flags<BitType> r)
+	{
+		return l & r;
+	}
+
+	template<typename BitType>
+	inline flags<BitType> and_(flags<BitType> l, BitType r)
+	{
+		return l & r;
+	}
+
+
+	template<typename BitType>
+	inline flags<BitType> or_(flags<BitType> l, flags<BitType> r)
+	{
+		return l | r;
+	}
+
+	template<typename BitType>
+	inline flags<BitType> or_(flags<BitType> l, BitType r)
+	{
+		return l | r;
+	}
+
+
+	template<typename BitType>
+	inline flags<BitType> xor_(flags<BitType> l, BitType r)
+	{
+		return l ^ r;
+	}
+
+	template<typename BitType>
+	inline flags<BitType> xor_(flags<BitType> l, flags<BitType> r)
+	{
+		return l ^ r;
+	}
+
+
+	template<typename BitType>
+	inline bool eq_(flags<BitType> l, flags<BitType> r)
+	{
+		return and_(l, r) == r;
+	}
+
+	template<typename BitType>
+	inline bool eq_(flags<BitType> l, BitType r)
+	{
+		return and_(l, r) == r;
+	}
+
+
+	template<typename BitType>
+	inline flags<BitType> not_(flags<BitType> f)
+	{
+		return ~f;
+	}
+
 
 	template <typename _Enum>
 	inline constexpr std::array<std::pair<_Enum, std::string_view>, 0> enum_metadata;
