@@ -284,8 +284,19 @@ inline FlagsName operator&(EnumType a, EnumType b) { return FlagsName(utl::cast<
 inline FlagsName operator^(EnumType a, EnumType b) { return FlagsName(utl::cast<FlagsName::MaskType>(a) ^ utl::cast<FlagsName::MaskType>(b)); } \
 inline EnumType operator~(EnumType e) { using underlying = std::underlying_type_t<EnumType>; return static_cast<EnumType>(~static_cast<underlying>(e)); }
 
-#define UTL_REGISTER_ENUM_CLASS(FlagType, ...) template<> inline constexpr std::array utl::enum_metadata<FlagType> = { __VA_ARGS__ }; \
+#define UTL_REGISTER_ENUM_CLASS(NameSpace, FlagType, ...) template<> inline constexpr std::array utl::enum_metadata<NameSpace::FlagType> = { __VA_ARGS__ }; \
+namespace NameSpace {\
 inline void to_json(nlohmann::json& j, const FlagType& t) { j = utl::enum_to_string(t); } \
-inline void from_json(const nlohmann::json& j, FlagType& t) { t = utl::enum_from_string<FlagType>(j.get<std::string>().c_str()); }
+inline void from_json(const nlohmann::json& j, FlagType& t) { t = utl::enum_from_string<FlagType>(j.get<std::string>().c_str()); } }
+
+#define UTL_REGISTER_ENUM_FLAGS(NameSpace, FlagsName, FlagType, ...) template<> inline constexpr std::array utl::enum_metadata<NameSpace::FlagType> = { __VA_ARGS__ }; \
+namespace NameSpace {\
+using FlagsName = utl::flags<FlagType>; \
+inline FlagsName operator|(FlagType a, FlagType b) { return FlagsName(utl::cast<FlagsName::MaskType>(a) | utl::cast<FlagsName::MaskType>(b)); } \
+inline FlagsName operator&(FlagType a, FlagType b) { return FlagsName(utl::cast<FlagsName::MaskType>(a) & utl::cast<FlagsName::MaskType>(b)); } \
+inline FlagsName operator^(FlagType a, FlagType b) { return FlagsName(utl::cast<FlagsName::MaskType>(a) ^ utl::cast<FlagsName::MaskType>(b)); } \
+inline FlagType operator~(FlagType e) { using underlying = std::underlying_type_t<FlagType>; return static_cast<FlagType>(~static_cast<underlying>(e)); } \
+inline void to_json(nlohmann::json& j, const FlagType& t) { j = utl::enum_to_string(t); } \
+inline void from_json(const nlohmann::json& j, FlagType& t) { t = utl::enum_from_string<FlagType>(j.get<std::string>().c_str()); } }
 
 #define UTL_ENUM_META(Enum, Str) std::pair{Enum, Str}
