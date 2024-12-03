@@ -8,6 +8,7 @@
 #endif
 
 #include <standart_library.h>
+#include <nlohmann/json.hpp>
 
 namespace utl
 {
@@ -193,6 +194,29 @@ namespace utl
 
 	template <typename _Enum>
 	constexpr bool has_enum_metadata = !enum_metadata<_Enum>.empty();
+
+	template <typename _Enum>
+	constexpr std::string_view enum_to_string(_Enum value)
+	{
+		for (const auto& [e, str] : enum_metadata<_Enum>)
+		{
+			if (e == value)
+				return str;
+		}
+
+		return "";
+	}
+
+	template <typename _Enum>
+	constexpr _Enum enum_from_string(std::string_view value)
+	{
+		for (const auto& [e, str] : enum_metadata<_Enum>)
+		{
+			if (value.compare(str))
+				return e;
+		}
+		return static_cast<_Enum>(0);
+	}
 }
 
 #if !defined(HAS_SPACESHIP_OPERATOR)
@@ -260,5 +284,8 @@ inline FlagsName operator&(EnumType a, EnumType b) { return FlagsName(utl::cast<
 inline FlagsName operator^(EnumType a, EnumType b) { return FlagsName(utl::cast<FlagsName::MaskType>(a) ^ utl::cast<FlagsName::MaskType>(b)); } \
 inline EnumType operator~(EnumType e) { using underlying = std::underlying_type_t<EnumType>; return static_cast<EnumType>(~static_cast<underlying>(e)); }
 
-#define UTL_REGISTER_ENUM_CLASS(FlagType, ...) template<> inline constexpr std::array utl::enum_metadata<FlagType> = { __VA_ARGS__ };
+#define UTL_REGISTER_ENUM_CLASS(FlagType, ...) template<> inline constexpr std::array utl::enum_metadata<FlagType> = { __VA_ARGS__ }; \
+inline void to_json(nlohmann::json& j, const FlagType& t) { j = utl::enum_to_string(t); } \
+inline void from_json(const nlohmann::json& j, FlagType& t) { t = utl::enum_from_string<FlagType>(j.get<std::string>().c_str()); }
+
 #define UTL_ENUM_META(Enum, Str) std::pair{Enum, Str}
