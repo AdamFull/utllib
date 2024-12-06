@@ -212,7 +212,7 @@ namespace utl
 	{
 		for (const auto& [e, str] : enum_metadata<_Enum>)
 		{
-			if (value.compare(str))
+			if (value.compare(str) == 0)
 				return e;
 		}
 		return static_cast<_Enum>(0);
