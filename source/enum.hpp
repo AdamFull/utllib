@@ -196,7 +196,7 @@ namespace utl
 	constexpr bool has_enum_metadata = !enum_metadata<_Enum>.empty();
 
 	template <typename _Enum>
-	constexpr std::string_view enum_to_string(_Enum value)
+	inline constexpr std::string_view enum_to_string(_Enum value)
 	{
 		for (const auto& [e, str] : enum_metadata<_Enum>)
 		{
@@ -208,7 +208,7 @@ namespace utl
 	}
 
 	template <typename _Enum>
-	constexpr _Enum enum_from_string(std::string_view value)
+	inline constexpr _Enum enum_from_string(std::string_view value)
 	{
 		for (const auto& [e, str] : enum_metadata<_Enum>)
 		{

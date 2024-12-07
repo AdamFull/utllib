@@ -104,6 +104,12 @@ namespace utl
 	}
 
 	template<typename _Ty>
+	inline constexpr u32 murmur_hash(std::basic_string_view<_Ty> str, u32 seed = 0u)
+	{
+		return murmur_hash(str.data(), str.size(), seed);
+	}
+
+	template<typename _Ty>
 	inline u32 murmur_hash(const _Ty& value, u32 seed = 0u)
 	{
 		return murmur_hash(reinterpret_cast<const char*>(&value), sizeof(_Ty), seed);
