@@ -10,12 +10,14 @@ add_subdirectory(parsing)
 add_subdirectory(plugin)
 add_subdirectory(reactive)
 add_subdirectory(threading)
+find_package(spdlog CONFIG REQUIRED)
 
 file(GLOB UTILITY_LIB_SOURCES *.cpp)
 
 add_library(${PROJECT_NAME} STATIC ${UTILITY_LIB_SOURCES})
 
 target_link_libraries(${PROJECT_NAME}
+    PRIVATE spdlog::spdlog
     PRIVATE utility_container
     PRIVATE utility_debugging
     PRIVATE utility_design_pattern
