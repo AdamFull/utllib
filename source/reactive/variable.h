@@ -6,13 +6,13 @@ namespace utl
 {
 	namespace reactive
 	{
-        using avaliable_types_t = std::tuple<i8, u8, i16, u16, i32, u32, i64, u64, bool, f32, f64, std::string>;
+        using avaliable_types_t = std::tuple<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, i64, uint64_t, bool, f32, f64, std::string>;
 
         template <class T>
         struct variable
         {
             static_assert(!std::is_same<T, avaliable_types_t>::value,
-                "Placed type is not avaliable. variable<T> support only types: int8_t, uint8_t, int16_t, uint16_t, i32, u32, int64_t, uint64_t, bool, f32, f64.");
+                "Placed type is not avaliable. variable<T> support only types: int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t, bool, f32, f64.");
 
         public:
             variable() = default;
@@ -68,14 +68,14 @@ namespace utl
             function<void(const T&, const T&)> notify{ nullptr };
         };
 
-        using react_i8 = variable<i8>;
-        using react_u8 = variable<u8>;
-        using react_i16 = variable<i16>;
-        using react_u16 = variable<u16>;
-        using react_i32 = variable<i32>;
-        using react_u32 = variable<u32>;
+        using react_i8 = variable<int8_t>;
+        using react_u8 = variable<uint8_t>;
+        using react_i16 = variable<int16_t>;
+        using react_u16 = variable<uint16_t>;
+        using react_i32 = variable<int32_t>;
+        using react_u32 = variable<uint32_t>;
         using react_i64 = variable<i64>;
-        using react_u64 = variable<u64>;
+        using react_u64 = variable<uint64_t>;
 
         using react_bool = variable<bool>;
 

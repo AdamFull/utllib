@@ -7,7 +7,7 @@ namespace utl
 {
 	namespace reactive
 	{
-		using event_id = u32;
+		using event_id = uint32_t;
 
 		class event
 		{
@@ -49,7 +49,7 @@ namespace utl
 					listeners_vec.end());
 			}
 		private:
-			std::unordered_map<event_id, utl::vector<default_delegate_t>> listeners;
+			std::unordered_map<event_id, std::vector<default_delegate_t>> listeners;
 		};
 	}
 }

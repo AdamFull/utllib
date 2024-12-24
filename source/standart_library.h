@@ -69,42 +69,36 @@ namespace utl
 		return static_cast<_Ty>(object);
 	}
 
-	template<class _Ty, class _ReturnType = typename std::underlying_type<_Ty>::type>
-	inline constexpr _ReturnType enum_cast(_Ty enum_value)
-	{
-		return cast<_ReturnType>(enum_value);
-	}
-
 	// U16 packing
-	constexpr inline const u16 pack_u16_8x2(u8 lhs, u8 rhs)
+	constexpr inline const uint16_t pack_u16_8x2(uint8_t lhs, uint8_t rhs)
 	{
 		return (rhs << 8) | (lhs & 0xFF);
 	}
 	
-	inline const void unpack_u16_8x2(u16 packed, u8& lhs, u8& rhs)
+	inline const void unpack_u16_8x2(uint16_t packed, uint8_t& lhs, uint8_t& rhs)
 	{
-		rhs = cast<u8>(packed >> 8);
-		lhs = cast<u8>(packed & 0xFF);
+		rhs = cast<uint8_t>(packed >> 8);
+		lhs = cast<uint8_t>(packed & 0xFF);
 	}
 	
 	// U32 packing
-	constexpr inline const u32 pack_u32_16x2(u16 lhs, u16 rhs)
+	constexpr inline const uint32_t pack_u32_16x2(uint16_t lhs, uint16_t rhs)
 	{
 		return (rhs << 16) | (lhs & 0xFFFF);
 	}
 	
-	inline const void unpack_u32_16x2(u32 packed, u16& lhs, u16& rhs)
+	inline const void unpack_u32_16x2(uint32_t packed, uint16_t& lhs, uint16_t& rhs)
 	{
-		rhs = cast<u16>(packed >> 16);
-		lhs = cast<u16>(packed & 0xFFFF);
+		rhs = cast<uint16_t>(packed >> 16);
+		lhs = cast<uint16_t>(packed & 0xFFFF);
 	}
 	
-	//constexpr inline const u32 pack_u32_8x4(u8 l0, u8 l1, u8 r0, u8 r1)
+	//constexpr inline const uint32_t pack_u32_8x4(uint8_t l0, uint8_t l1, uint8_t r0, uint8_t r1)
 	//{
 	//	return (l0 << 24) + (l1 << 16) + (r0 << 8) + r1;
 	//}
 	//
-	//inline const void unpack_u32_8x4(u32 packed, u8& l0, u8& l1, u8& r0, u8& r1)
+	//inline const void unpack_u32_8x4(uint32_t packed, uint8_t& l0, uint8_t& l1, uint8_t& r0, uint8_t& r1)
 	//{
 	//	l0 = (packed & 0xff000000) >> 24;
 	//	l1 = (packed & 0x00ff0000) >> 16;
@@ -113,12 +107,12 @@ namespace utl
 	//}
 
 	// U64 packing
-	//constexpr inline const u64 pack_u64_8x8(u8 l0, u8 l1, u8 l2, u8 l3, u8 r0, u8 r1, u8 r2, u8 r3)
+	//constexpr inline const uint64_t pack_u64_8x8(uint8_t l0, uint8_t l1, uint8_t l2, uint8_t l3, uint8_t r0, uint8_t r1, uint8_t r2, uint8_t r3)
 	//{
 	//	return (l1 << 56ull) + (l1 << 48ull) + (l2 << 40ull) + (l3 << 32ull) + (r0 << 24ull) + (r1 << 16ull) + (r2 << 8ull) + r3;
 	//}
 	//
-	//inline const void unpack_u64_8x8(u64 packed, u8& l0, u8& l1, u8& l2, u8& l3, u8& r0, u8& r1, u8& r2, u8& r3)
+	//inline const void unpack_u64_8x8(uint64_t packed, uint8_t& l0, uint8_t& l1, uint8_t& l2, uint8_t& l3, uint8_t& r0, uint8_t& r1, uint8_t& r2, uint8_t& r3)
 	//{
 	//	l0 = (packed & 0xff00000000000000ull) >> 56ull;
 	//	l1 = (packed & 0x00ff000000000000ull) >> 48ull;
@@ -130,12 +124,12 @@ namespace utl
 	//	r3 = (packed & 0x00000000000000ffull);
 	//}
 	//
-	//constexpr inline const u64 pack_u64_16x4(u16 l0, u16 l1, u16 r0, u16 r1)
+	//constexpr inline const uint64_t pack_u64_16x4(uint16_t l0, uint16_t l1, uint16_t r0, uint16_t r1)
 	//{
 	//	return (l0 << 48ull) + (l1 << 32ull) + (r0 << 16ull) + r1;
 	//}
 	//
-	//inline const void unpack_u64_16x4(u64 packed, u16& l0, u16& l1, u16& r0, u16& r1)
+	//inline const void unpack_u64_16x4(uint64_t packed, uint16_t& l0, uint16_t& l1, uint16_t& r0, uint16_t& r1)
 	//{
 	//	l0 = (packed & 0xffff000000000000ull) >> 48ull;
 	//	l1 = (packed & 0x0000ffff00000000ull) >> 32ull;
@@ -143,12 +137,12 @@ namespace utl
 	//	r1 = (packed & 0x000000000000ffffull);
 	//}
 	//
-	//constexpr inline const u64 pack_u64_32x2(u32 lhs, u32 rhs)
+	//constexpr inline const uint64_t pack_u64_32x2(uint32_t lhs, uint32_t rhs)
 	//{
 	//	return (lhs << 32ull) + rhs;
 	//}
 	//
-	//inline const void unpack_u64_32x2(u64 packed, u32& lhs, u32& rhs)
+	//inline const void unpack_u64_32x2(uint64_t packed, uint32_t& lhs, uint32_t& rhs)
 	//{
 	//	lhs = (packed & 0xffffffff00000000ull) >> 32ull;
 	//	rhs = (packed & 0x00000000ffffffffull);

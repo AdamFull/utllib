@@ -64,7 +64,7 @@ namespace utl
             _KTy meanFps{};
         };
 
-        using fps_counter32 = fps_counter<f32, u32>;
-        using fps_counter64 = fps_counter<f64, u64>;
+        using fps_counter32 = fps_counter<f32, uint32_t>;
+        using fps_counter64 = fps_counter<f64, uint64_t>;
 	}
 }

@@ -1,5 +1,4 @@
 #include "plugin.h"
-#include <hash.hpp>
 
 using namespace utl::plugin_system;
 
@@ -23,7 +22,7 @@ uplugin::~uplugin()
 		unload();
 }
 
-bool uplugin::load(const utl::vector<u8>& data)
+bool uplugin::load(const std::vector<uint8_t>& data)
 {
 	if (data.empty())
 		return false;
@@ -164,7 +163,7 @@ bool uplugin::load(const utl::vector<u8>& data)
 			const auto addRVA = ((DWORD*)((DWORD_PTR)m_pModule + lpImageExportDirectory->AddressOfFunctions))[lpCurrentOridnal];
 			UnDecorateSymbolName(lpCurrentFunctionName, lpCurrentFnctionNameDemangled, sizeof(lpCurrentFnctionNameDemangled), UNDNAME_COMPLETE);
 
-			m_tableMap[murmur_hash_64(lpCurrentFnctionNameDemangled)] = lpCurrentOridnal;
+			//m_tableMap[murmur_hash_64(lpCurrentFnctionNameDemangled)] = lpCurrentOridnal;
 			m_vFunctionTable.at(lpCurrentOridnal) = ((DWORD_PTR)m_pModule + addRVA);
 		}
 	}
@@ -211,14 +210,14 @@ bool uplugin::unload()
 
 intptr_t uplugin::getFunctionAddress(const char* function_name)
 {
-	auto hash = murmur_hash_64(function_name);
+	auto hash = 0;// murmur_hash_64(function_name);
 	if (auto found = m_tableMap.find(hash); found != m_tableMap.end())
 		return getFunctionAddress(found->second);
 
 	return static_cast<intptr_t>(0);
 }
 
-intptr_t uplugin::getFunctionAddress(u64 function_index)
+intptr_t uplugin::getFunctionAddress(uint64_t function_index)
 {
 	return m_vFunctionTable.at(function_index);
 }

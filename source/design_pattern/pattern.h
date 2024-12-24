@@ -70,7 +70,7 @@ namespace utl
             }
 
         protected:
-            u64 delivered{ 0 };
+            uint64_t delivered{ 0 };
         };
 
         template<class _Ty, class _Kty>
@@ -79,7 +79,7 @@ namespace utl
         public:
             constexpr derived_polymorphus() noexcept { _Ty::delivered = self_hash; }
             virtual ~derived_polymorphus() = default;
-            static constexpr const u64 self_hash{ type_hash<_Kty>() };
+            static constexpr const uint64_t self_hash{ type_hash<_Kty>() };
         };
 
         template<class _Ty>

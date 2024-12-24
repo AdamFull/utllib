@@ -7,18 +7,18 @@ namespace utl
 {
 	struct guid
 	{
-		u32 d1;
-		u16 d2;
-		u16 d3;
-		u8 d4[8];
+		uint32_t d1;
+		uint16_t d2;
+		uint16_t d3;
+		uint8_t d4[8];
 	};
 
 	namespace details
 	{
-		constexpr const u64 short_guid_form_length = 36ull;	// XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
-		constexpr const u64 long_guid_form_length = 38ull;	// {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}
+		constexpr const uint64_t short_guid_form_length = 36ull;	// XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+		constexpr const uint64_t long_guid_form_length = 38ull;	// {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}
 
-		constexpr i32 parse_hex_digit(const char c)
+		constexpr int32_t parse_hex_digit(const char c)
 		{
 			using namespace std::string_literals;
 
@@ -35,9 +35,9 @@ namespace utl
 		template<typename _Ty>
 		constexpr _Ty parse_hex(const char* ptr)
 		{
-			constexpr const u64 digits = sizeof(_Ty) * 2ull;
+			constexpr const uint64_t digits = sizeof(_Ty) * 2ull;
 			_Ty result{};
-			for (u64 i = 0; i < digits; ++i)
+			for (uint64_t i = 0; i < digits; ++i)
 				result |= parse_hex_digit(ptr[i]) << (4ull * (digits - i - 1ull));
 
 			return result;
@@ -46,23 +46,23 @@ namespace utl
 		constexpr guid make_guid_helper(const char* begin)
 		{
 			guid result{};
-			result.d1 = parse_hex<u32>(begin);
+			result.d1 = parse_hex<uint32_t>(begin);
 			begin += 8ull + 1ull;
-			result.d2 = parse_hex<u16>(begin);
+			result.d2 = parse_hex<uint16_t>(begin);
 			begin += 4ull + 1ull;
-			result.d3 = parse_hex<u16>(begin);
+			result.d3 = parse_hex<uint16_t>(begin);
 			begin += 4ull + 1ull;
-			result.d4[0] = parse_hex<u8>(begin);
+			result.d4[0] = parse_hex<uint8_t>(begin);
 			begin += 2ull;
-			result.d4[1] = parse_hex<u8>(begin);
+			result.d4[1] = parse_hex<uint8_t>(begin);
 			begin += 2ull + 1ull;
-			for (u64 i = 0ull; i < 6ull; ++i)
+			for (uint64_t i = 0ull; i < 6ull; ++i)
 				result.d4[i + 2] = parse_hex<uint8_t>(begin + i * 2ull);
 
 			return result;
 		}
 
-		template<u64 _N>
+		template<uint64_t _N>
 		constexpr guid make_guid(const char(&str)[_N])
 		{
 			using namespace std::string_literals;
@@ -81,7 +81,7 @@ namespace utl
 	std::string to_string(const guid& id);
 	guid generate_guid();
 
-	inline constexpr guid operator "" _guid(const char* str, u64 N)
+	inline constexpr guid operator "" _guid(const char* str, uint64_t N)
 	{
 		using namespace std::string_literals;
 		using namespace details;
